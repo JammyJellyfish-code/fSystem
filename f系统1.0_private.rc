@@ -18,11 +18,11 @@ FILETYPE VFT_APP
   {
     BLOCK "080404E4"
     {
-      VALUE "CompanyName", "FOS Development Team"
+      VALUE "CompanyName", "Jellyfish Studio"
       VALUE "FileVersion", "1.0.400.6666"
       VALUE "FileDescription", "fϵͳ1.0-codename nori"
       VALUE "InternalName", "fOS 1.0.exe"
-      VALUE "LegalCopyright", "Copyright (C) 2025 FOS Development Team"
+      VALUE "LegalCopyright", "Copyright (C) 2025 Jellyfish Studio"
       VALUE "LegalTrademarks", "fϵͳ1.0-codename nori"
       VALUE "OriginalFilename", "fOS 1.0.exe"
       VALUE "ProductName", "fϵͳ1.0-codename nori"

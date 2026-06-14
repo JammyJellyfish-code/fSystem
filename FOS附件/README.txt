@@ -24,4 +24,4 @@ This is a personally developed Windows GUI system project for learning and resea
 - 源码仅供参考学习 / Source code is for reference and learning only
 
 版权 / Copyright：
-© 2020~9999 JammyJellyfish@hotmail.com 保留所有权利 / © 2020~9999 JammyJellyfish@hotmail.com All Rights Reserved
+© 2020~9999 Jellyfish Studio 保留所有权利 / © 2020~9999 Jellyfish Studio All Rights Reserved

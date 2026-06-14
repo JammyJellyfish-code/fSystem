@@ -2,7 +2,7 @@
 
 项目名称：f系统1.0 / Project Name: f System 1.0
 开发者：JammyJellyfish@hotmail.com / Developer: JammyJellyfish@hotmail.com
-版权所有 (C) 2020~9999 JammyJellyfish@hotmail.com / Copyright (C) 2020~9999 JammyJellyfish@hotmail.com
+版权所有 (C) 2020~9999 Jellyfish Studio / Copyright (C) 2020~9999 Jellyfish Studio
 保留所有权利 / All Rights Reserved
 
 许可条款 / License Terms：
@@ -31,6 +31,6 @@ damages arising from the use of this software.
 如有问题请联系开发者。
 Please contact the developer if you have any questions.
 
-更多类容请详见《fos系统软件使用许可条款（修订版）.txt》
+更多类容请详见《Jellyfish Studio软件许可条款.txt》
 
 最后更新：2025年 / Last Updated: 2025
