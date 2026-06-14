@@ -1,0 +1,62 @@
+[Project]
+FileName=fϵͳ1.0.dev
+Name=fϵͳ1.0
+Type=0
+Ver=2
+ObjFiles=
+Includes=
+Libs=
+PrivateResource=fϵͳ1.0_private.rc
+ResourceIncludes=
+MakeIncludes=
+Compiler=
+CppCompiler=
+Linker=
+IsCpp=1
+Icon=fϵͳ1.0.ico
+ExeOutput=
+ObjectOutput=
+LogOutput=
+LogOutputEnabled=0
+OverrideOutput=0
+OverrideOutputName=fϵͳ1.0.exe
+HostApplication=
+UseCustomMakefile=0
+CustomMakefile=
+CommandLine=
+Folders=
+IncludeVersionInfo=1
+SupportXPThemes=0
+CompilerSet=1
+CompilerSettings=00000000c0000000101000000
+UnitCount=1
+
+[VersionInfo]
+Major=1
+Minor=0
+Release=200
+Build=2025
+LanguageID=2052
+CharsetID=1252
+CompanyName=huangzihan's company
+FileVersion=1.0.200.2025
+FileDescription=fOS 1.0
+InternalName=fOS 1.0.exe
+LegalCopyright=Copyright (C) 2025 f System Development Team
+LegalTrademarks=fOS
+OriginalFilename=fOS 1.0.exe
+ProductName=fOS 1.0
+ProductVersion=1.0.200.2025
+AutoIncBuildNr=0
+SyncProduct=1
+
+[Unit1]
+FileName=main.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
