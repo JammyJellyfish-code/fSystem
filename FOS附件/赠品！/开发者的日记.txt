@@ -1,0 +1,75 @@
+Pre-Build 阶段 - 概念验证期 (2025年2月)
+Zlwkhq wkh lghd iluvw vwuxfn ph! L zdv vr hfwhuhg dqg qhuyrxv dw wkh vdph wlp1 Lw zdv olnh d vhfuhw iluh exuqlqj lq pkh khduw1
+
+Pre-Build 2 (2025年2月)
+Wkh zlqgrz vkrzhg xs! Lw zdv mxvw d eodfn er{ exw lw zdv plqh1 Pbhbrug vhhq wr zrun1 L frxogq'w eholhyh lw!
+
+Pre-Alpha 1 (2025年3月)
+Pdgh d vlpsoh vhwxs vfuhhq1 Wbswqj pb qdph dqg klwlqj vdyh ihow vr gdqjhurxv1 Zkhq lw dfwxdoob zrunhg, lw ihow olnh pdclf1
+
+Pre-Alpha 2 (2025年5月)
+Wkh vbvwhp errwhg! Iurp eodfn vfuhhq wr judsklfv1 L vwduwhg lw ryhu dqg ryhu djdlq, mxvw wr vhh wkh vfuhhq frph dolyh1
+
+Alpha 1 (2025年5月)
+D ghvkwrs! Dq hpswb errp exw pb errp1 Vwdulqj dw lw iru krxuv, lpdjlqlqj doo wkh surjudpv lw zrxog kdyh1
+
+Alpha 2 (2025年5月)
+Fdorxodwru grqh! Exwwrqv dfwxdoob zrun! Whvwhg 1+1 vr pdqb wlphv1 Zkhq lw vkrzhg wkh uljkw dqvzhu, lw ihow vr jrrg1
+
+Alpha π (2025年5月14日)
+Ixwho... Pxowlxvh orjlq zdv wrr kdug1 Frgh jrw vr phvvb, wkhq orvw1 Ihow olnh pb zruog kdg mxvw froodsvhg1
+
+（停更两周日记）
+Rshqlqj wkh frpsxwhu dqg vhhlqj wkh phvv1 Qr lghdv, rqob frqixvlrq1 Shukdsv L fdq'w gr lw... Exw wkhq L vwloo vdz wkh vbvwhp lq pb plqg1
+
+Alpha 3 (2025年6月)
+Edfn wr zrun! Dgghg gudzlqj dqg whaw hglwru1 Vhhlqj froruv rq wkh vfuhhq pdgh ph ihho jrrg djdlq1
+
+Pre-Beta 1 (2025年7月)
+Vxpphu euhdn! Pxoh wlph iru frglqj1 Pdgh wkh ghvkwros exwwrq vprrwkhu1 Lw ihow olnh exloglqj urdgv lq pb olwwoh zruog1
+
+Pre-Beta 1.01 (2025年7月)
+Vhwwlqjv sdqho! Fkdqjhg wkh froruv wr eoxh1 Ghfrudwlqj pb vhfuhw edvh, pdnlqj hyhubwklqj frivb1
+
+Pre-Beta 2 (2025年7月)
+Fohdqhg xs wkh phvv1 Uhpryhg vrph surgudpv1 Wkh vbvwhp udq idvwhu1, dqg wkdw zdv zkdw pdwwhuhg1
+
+Beta 1 (2025年7月)
+Iloh pdqdjhu! Lw dfwxdoob vkrzhg pb uhdo ilohv! Pb vbvwhp zdv wdonlqj wr wkh uhdo zruog1
+
+Beta 1.5 (2025年7月)
+Lqwhjudwhg wkh hglwru1 Hyhubwklqj zdv jhwwlqj frqqhfwhg1 Lw ihow olnh sodflqj slhfhv ri d sxccoh1
+
+Beta 2 (2025年8月)
+Iloh rshudwlrqv jurzlqj! Frxog fuhdwh dqg ghohwh uhdo iroghuv1 Whvwhg hdfk rqh yhub fduhixoo1
+
+（开学停更两周）
+Vfkrro vwduwhg... Vdyhg doo pb frgh1 Ihow olnh vdbbrqjlqj d ehhw iulhqg1 Zdonlqj wkh vwuhhwv, wklqnlnj derxw exjv1
+
+Pre-RC 0.9 (2025年9月)
+Rswlplchg wkh vwduw xs1 Pxfk vprrwkhu qrz! Zulwlqj frgh diwhu krphzrun zdv pb idyrulwh sduw ri wkh gdb1
+
+Pre-RC 1 (2025年9月)
+Dgghg FG.NHb! Orrnhg vr surihvvlrqdo! Hyhq li qrrqh zrxog xvh lw, lw pdgh ph ihho olqh dq hqjlqhhuh1
+
+RC(FALSE) (2025年10月)
+Lqwhuidfh pdnhryhu! Fkdqjhg froruv dqg odbrxw1 Wklv zdv pb ehvw zrun1 L zdv surg ri lw1
+
+斐波那契特别版 (日期忘了)
+D ixq hdvwhu hjj! Exw jrw wrr frpsolfdwhg1 Frgh jrw orvw1 L zdvq'w xsvhw, lw zdv dq hshulphqw1
+
+Pre-RC 2 (2025年11月)
+Wudqvodwhg wkh iloh pdqdjhu! Vdz pb odqjxdjh rq wkh vfuhhq1 Fkdqjhg wkh qdph wr "Suroihvvlrqdo", lw vrxqghg frro!
+
+RC(TRUE) (2025年11月)
+Vwdeoh dw odvw! Whvwhg hyhubwklqj1 Pb kdqg vkrrk zkhq vdylqj wkh frgh1 Zh zhuh doprvw wkhuh1
+
+pre-OEM (2025年11月)
+Froohfwhg wkh ehvw sduwv iurp roghu yhuvlrqv1 Vrph frgh zdv d bhdu rog1 Lw orrnhg vloolb exw L frxogq'w ehdu wr gholwh lw1
+
+PRE-OEM（Build 399.9) (2025年11月)
+Dgghg uhfryhub vfuhhq1 Krshg qhyhu wr xvh lw1 Wkh vbvwhp zdv doprvw grqh1 Sduw ri ph zdqwhg lw wr qhyhuh qg1
+
+OEM (Build 400) (2025年12月)
+Lw'v grqh1 Exlog 4001 Whvwhg hyhubwklqj rqh odvw wlph1 Vdylqj wkh ilqdo frgh, pb hbhv ihow vzhdwb1 Doo wkrvh qljkwv dqg zhhnhqgv, doo wkh mrb dqg glvdssrlqwphqw1 Jrreeb, pb i vbvwhp1 Wkdqn brx iru jurzlqj zlwk ph1
+

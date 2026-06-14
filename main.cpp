@@ -10,6 +10,16 @@
  * 开发者：JammyJellyfish@hotmail.com / Developer: JammyJellyfish@hotmail.com
  * 最后更新：2025年 / Last Updated: 2025
  */
+//30/11/25 15:57:加入了开机音乐
+//30/11/25 15:58:正式更改项目名为f System 1.0 Professional (music!!!) codename nori 
+//30/11/25 15:59:原项目发行前测试
+//30/11/25 15:59:取消了原项目的发行计划
+//30/11/25 16:00:f System 1.0 Professional (music!!!) codename nori 预计发布时间2026年1月 
+//30/11/25 22:27:加入紫屏 
+//01/12/25 23:26:加入了彩蛋
+//01/12/25 23:26:计划加入音频播放器 
+//07/12/25 13:28:加入了更多版权信息
+//07/12/25 13:28:正式进入了最终测试阶段 
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
@@ -19,6 +29,50 @@
 #include <shellapi.h>
 #include <direct.h>  // 添加目录操作支持
 #include <algorithm> // 添加algorithm头文件用于min/max函数
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+
+// 版本信息
+#define MAJOR_VERSION 1
+#define MINOR_VERSION 0
+#define BUILD_VERSION 400
+#define RELEASE_YEAR 2025
+
+// 配置文件路径
+#define CONFIG_FILE "f系统配置.dat"
+
+// Vista风格颜色
+#define VISTA_BLUE RGB(0, 70, 140)
+#define VISTA_LIGHT_BLUE RGB(100, 150, 220)
+#define VISTA_GREEN RGB(60, 180, 75)
+#define VISTA_RED RGB(220, 80, 60)
+#define VISTA_ORANGE RGB(240, 150, 30)
+#define DESKTOP_PINK RGB(255, 200, 220)
+#define BOOT_BLACK RGB(0, 0, 0)
+#define TASKBAR_GRAY RGB(60, 60, 60)
+#define TASKBAR_BUTTON RGB(80, 80, 80)
+#define TASKBAR_BUTTON_HOVER RGB(100, 100, 100)
+#define TASKBAR_BUTTON_PRESS RGB(120, 120, 120)
+#define CALC_BG RGB(240, 240, 240)
+#define CALC_BUTTON RGB(220, 220, 220)
+#define CALC_OPERATOR RGB(180, 180, 220)
+#define XP_BLUE RGB(0, 60, 116)
+#define XP_LIGHT_BLUE RGB(185, 209, 234)
+#define XP_GRAY RGB(212, 208, 200)
+#define SPECIAL_BG RGB(255, 230, 240)
+#define FINAL_BG RGB(255, 240, 200)
+#define SHOUHUI_BODY RGB(255, 220, 100)
+#define SHOUHUI_EYES RGB(0, 0, 0)
+#define SHOUHUI_MOUTH RGB(255, 100, 100)
+#define OOBE_BG RGB(30, 60, 120)
+#define FILEMANAGER_BG RGB(255, 255, 240)
+#define CDKEY_BG RGB(40, 80, 160)
+#define GAME_BUTTON RGB(150, 100, 200)  // 水母游戏按钮颜色
+#define EDITOR_BG RGB(255, 255, 255)
+#define EDITOR_TEXT RGB(0, 0, 0)
+#define EDITOR_LINE_NUM RGB(100, 100, 100)
+#define EDITOR_SELECTION RGB(200, 220, 255)
+#define SETTINGS_BG RGB(250, 250, 255)
 
 using namespace std; // 使用std命名空间
 
@@ -41,6 +95,17 @@ static int level = 1;
 static float tentacleWave = 0.0f;
 static int levelTime = 0;
 static int levelTargetTime = 200;
+
+
+static BOOL shutdownMusicPlaying = FALSE;
+static DWORD shutdownMusicStartTime = 0;
+
+static BOOL isBugHovered = FALSE;      // Bug报告按钮悬停状态
+static BOOL isBugPressed = FALSE;      // Bug报告按钮按下状态
+// USB设备错误全局变量
+static BOOL showUSBError = FALSE;
+static char usbDriveLetter = 'D';
+static char errorMessage[200] = "";
 
 // 障碍物结构
 typedef struct {
@@ -137,6 +202,36 @@ void CheckJellyfishCollisions();
 void ActivatePowerUp(int type);
 void HandleJellyfishGameInput(WPARAM wParam, HWND hwnd);
 void CheckGameActivation(WPARAM wParam, HWND hwnd);
+// 文件管理器彩蛋函数声明
+void DrawFOSEgg(HDC hdc, HWND hwnd);
+void DrawDialogueScene(HDC hdc, int centerX, int centerY);
+void DrawDevTimeline(HDC hdc, int centerX, int centerY);
+void DrawFeatureShowcase(HDC hdc, int centerX, int centerY);
+void DrawCredits(HDC hdc, int centerX, int centerY);
+// USB设备错误界面函数声明
+void ShowUSBErrorScreen(HWND hwnd, char driveLetter, const char* message);
+void DrawUSBErrorScreen(HDC hdc, int centerX, int centerY);
+void DrawUSBDeviceArt(HDC hdc, int centerX, int centerY);
+void DrawUSBErrorButton(HDC hdc, int x, int y, int width, int height, const char* text, BOOL isPrimary);
+void HandleUSBErrorInput(char key);
+// 网线接头背景相关函数声明
+void CreateEthernetBackground(HWND hwnd);
+void DrawEthernetScene(HDC hdc);
+void DrawDetailedEthernetJack(HDC hdc, int x, int y, int jackId);
+void DrawEthernetCables(HDC hdc, POINT* positions);
+void DrawNetworkHub(HDC hdc, int x, int y);
+void DrawEthernetCable(HDC hdc, int startX, int startY, int endX, int endY, int cableId);
+// Bug列表功能函数声明
+void ShowBugList(HWND hwnd);
+void DrawBugList(HDC hdc, int centerX, int centerY);
+void HandleBugListInput(char key);
+void LoadBugListFromFile();
+void SaveBugListToFile();
+void ToggleBugFixedStatus(int index);
+void DeleteBug(int index);
+
+void DrawJellyfishPleaScene(HDC hdc, int centerX, int centerY);
+void DrawPleadingJellyfish(HDC hdc, int x, int y, int size);
 
 // 全局变量
 static BOOL showFOSBeta = TRUE;
@@ -160,6 +255,7 @@ static int fosProgressValue = 0;
 static int currentStep = 0;
 static int shutdownProgress = 0;
 static int trialDaysRemaining = 30;
+static int settingsFocusField = 0; // 0:用户名, 1:密码, 2:确认密码
 static HBITMAP hBackgroundBitmap = NULL;
 
 // CD-KEY变量
@@ -167,7 +263,7 @@ static char cdKeyInput[50] = "";
 static BOOL cdKeyError = FALSE;
 static char cdKeyErrorMsg[100] = "";
 
-// OOBE配置变量
+// OOBE配置变量 - 修复：添加密码跳过标志
 static char username[50] = "User";
 static char password[50] = "1234";
 static char confirmPassword[50] = "1234";
@@ -179,6 +275,7 @@ static BOOL isPasswordMode = FALSE;
 static BOOL loginError = FALSE;
 static BOOL oobeError = FALSE;
 static char oobeErrorMsg[100] = "";
+static BOOL skipPasswordSetup = FALSE;  // 新增：密码跳过标志
 
 // 任务栏按钮状态
 static BOOL isShutdownHovered = FALSE;
@@ -214,11 +311,11 @@ static DWORD lastScrollTime = 0;
 // 系统信息变量
 static SYSTEM_INFO sysInfo;
 static MEMORYSTATUSEX memoryStatus;
-static char osVersion[100] = "fOS 1.0 Professional (Build 200)";
-static char cpuInfo[100] = "32位架构 第1代 型号1 修订版本100";
-static char memoryInfo[100] = "512 MB RAM";
-static char buildInfo[100] = "Build 200 (fOS.1.0.Professional)";
-static char versionInfo[200] = "fOS 1.0 Professional\n版本 1.0.200.2025\n编译于 2025年";
+static char osVersion[100] = "fOS 1.0 Professional (Build 400) codename nori";
+static char cpuInfo[100] = "f系统1.0专用处理器";
+static char memoryInfo[100] = "版权归JammyJellyfish和fos编写组所有（2020-2030），严禁二次分发！";
+static char buildInfo[100] = "Build 400 (fOS.1.0.Professional)";
+static char versionInfo[200] = "fOS 1.0 Professional\n版本 1.0.400.2025\n编译于 2025年";
 static DWORD lastSystemInfoUpdate = 0;
 
 // 文件管理器变量 - 改为真实文件操作
@@ -227,16 +324,20 @@ static char fileList[100][256];
 static int fileCount = 0;
 static char commandInput[100] = "";  // 命令输入
 static BOOL commandMode = FALSE;     // 命令模式标志
-static char commandOutput[2000] = ""; // 命令输出 - 增大缓冲区
+static char commandOutput[10000000] = ""; // 命令输出 - 增大缓冲区
 
 // 文件编辑器变量
 static BOOL showFileEditor = FALSE;
 static char editFileName[256] = "";
-static char fileContent[10000] = "";  // 文件内容缓冲区
+static char fileContent[100000000] = "";  // 文件内容缓冲区
 static int cursorPosition = 0;
 static int scrollPosition = 0;
 static BOOL isEditing = FALSE;
 static int textFormat = 0;  // 0:普通文本 1:代码 2:富文本 3:Markdown
+
+// 网线接头背景相关变量
+static HBITMAP hEthernetBackground = NULL;
+static BOOL isEthernetBackgroundLoaded = FALSE;
 
 // 文件信息结构
 typedef struct {
@@ -262,6 +363,45 @@ static BOOL settingsError = FALSE;
 static char settingsErrorMsg[100] = "";
 static int selectedTheme = 0;  // 0:默认 1:蓝色 2:绿色 3:紫色
 
+// 文件管理器彩蛋变量 - 基于开发历程
+static int fosInputCount = 0;
+static BOOL showFOSEgg = FALSE;
+static int fosEggState = 0; // 0:未激活 1:旁白对话 2:开发回顾 3:功能展示 4:致谢名单
+static int fosEggProgress = 0;
+static DWORD lastFOSEggTime = 0;
+static int currentDevStage = 0;
+static int dialogueIndexx = 0; // 对话索引
+
+static BOOL showPurpleScreen = FALSE;
+static int purpleScreenProgress = 0;
+static DWORD purpleScreenStartTime = 0;
+static BOOL purpleScreenLocked = FALSE; // 是否锁定无法返回
+
+// 紫屏专属错误代码
+#define PURPLE_SCREEN_CRITICAL 0xF0505050  // FOS专属错误
+
+// Bug列表相关全局变量
+static BOOL showBugList = FALSE;
+static int bugListCount = 0;
+static int selectedBugIndex = -1;
+static int bugListScroll = 0;
+static BOOL isBugListHovered = FALSE;
+static BOOL isBugListPressed = FALSE;
+#define MAX_BUGS 100
+
+// Bug结构体
+typedef struct {
+    char title[100];
+    char description[1000];
+    int severity;
+    int category;
+    char date[50];
+    char reporter[50];
+    BOOL fixed;
+} BugItem;
+
+static BugItem bugList[MAX_BUGS];
+
 // 主题颜色定义
 typedef struct {
     COLORREF desktopColor;
@@ -272,18 +412,19 @@ typedef struct {
 } Theme;
 
 static Theme themes[] = {
-    {RGB(255, 200, 220), RGB(60, 60, 60), RGB(0, 70, 140), RGB(80, 80, 80), "默认粉色"},
+    {RGB(255, 200, 220), RGB(60, 60, 60), RGB(0, 70, 140), RGB(80, 80, 80), "默认粉"},
     {RGB(200, 220, 255), RGB(50, 70, 100), RGB(30, 100, 200), RGB(70, 100, 150), "专业蓝"},
     {RGB(220, 255, 220), RGB(60, 100, 70), RGB(40, 160, 80), RGB(80, 120, 90), "清新绿"},
     {RGB(240, 220, 255), RGB(80, 60, 100), RGB(120, 80, 180), RGB(100, 80, 130), "优雅紫"}
 };
 
 static int currentThemeIndex = 0;
+static int currentField = 0; // Bug报告软件当前输入字段
 
 // 版本信息
 #define MAJOR_VERSION 1
 #define MINOR_VERSION 0
-#define BUILD_VERSION 200
+#define BUILD_VERSION 400
 #define RELEASE_YEAR 2025
 
 // 配置文件路径
@@ -321,6 +462,11 @@ static int currentThemeIndex = 0;
 #define EDITOR_LINE_NUM RGB(100, 100, 100)
 #define EDITOR_SELECTION RGB(200, 220, 255)
 #define SETTINGS_BG RGB(250, 250, 255)
+
+// 紫屏函数声明
+void DrawCriticalPurpleScreen(HDC hdc, RECT rect);
+void TriggerCriticalPurpleScreen(HWND hwnd);
+void HandlePurpleScreenInput(char key, HWND hwnd);
 
 // 函数声明
 void clean(HWND hwnd);
@@ -477,11 +623,1615 @@ AppRect GetAppRect(HWND hwnd, int appType) {
             rect.right = centerX + 350;
             rect.bottom = centerY + 300;
             break;
+        case 7: // Bug记录软件
+   			rect.left = centerX - 400;
+    		rect.top = centerY - 300;
+    		rect.right = centerX + 400;
+    		rect.bottom = centerY + 300;
+    		break;
         default:
             rect.left = rect.top = rect.right = rect.bottom = 0;
     }
     
     return rect;
+}
+
+// 绘制水母求饶界面（公水母代表开发团队）
+void DrawJellyfishPleaScene(HDC hdc, int centerX, int centerY) {
+    RECT sceneRect = {centerX - 400, centerY - 300, centerX + 400, centerY + 300};
+    
+    // 海洋背景
+    for (int y = sceneRect.top; y < sceneRect.bottom; y++) {
+        double ratio = (double)(y - sceneRect.top) / (sceneRect.bottom - sceneRect.top);
+        int r = (int)(30 * (1 - ratio) + 100 * ratio);
+        int g = (int)(60 * (1 - ratio) + 150 * ratio);
+        int b = (int)(120 * (1 - ratio) + 200 * ratio);
+        
+        COLORREF color = RGB(r, g, b);
+        HPEN hPen = CreatePen(PS_SOLID, 1, color);
+        HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+        MoveToEx(hdc, sceneRect.left, y, NULL);
+        LineTo(hdc, sceneRect.right, y);
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hPen);
+    }
+    
+    // 绘制海底沙子
+    RECT sandRect = {sceneRect.left, sceneRect.bottom - 100, sceneRect.right, sceneRect.bottom};
+    HBRUSH hSandBrush = CreateSolidBrush(RGB(210, 180, 140));
+    FillRect(hdc, &sandRect, hSandBrush);
+    DeleteObject(hSandBrush);
+    
+    // 绘制一些海草
+    HPEN hSeaweedPen = CreatePen(PS_SOLID, 3, RGB(60, 180, 75));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hSeaweedPen);
+    
+    for (int i = 0; i < 5; i++) {
+        int x = sceneRect.left + 80 + i * 160;
+        int y = sceneRect.bottom - 100;
+        
+        MoveToEx(hdc, x, y, NULL);
+        for (int j = 0; j < 8; j++) {
+            int offset = (int)(sin(j * 0.8 + i * 0.5) * 20);
+            LineTo(hdc, x + offset, y - j * 15);
+        }
+    }
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hSeaweedPen);
+    
+    // 绘制惊恐的公水母（代表开发团队）
+    DrawPleadingJellyfish(hdc, centerX, centerY - 50, 100);
+    
+    // 对话框1 - 水母的求饶
+    RECT dialogRect1 = {centerX - 350, centerY + 80, centerX + 350, centerY + 130};
+    HBRUSH hDialogBrush1 = CreateSolidBrush(RGB(255, 255, 200));
+    FillRect(hdc, &dialogRect1, hDialogBrush1);
+    DeleteObject(hDialogBrush1);
+    
+    HPEN hDialogPen1 = CreatePen(PS_SOLID, 2, RGB(150, 150, 100));
+    hOldPen = (HPEN)SelectObject(hdc, hDialogPen1);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    RoundRect(hdc, dialogRect1.left, dialogRect1.top, dialogRect1.right, dialogRect1.bottom, 15, 15);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hDialogPen1);
+    
+    // 对话框2 - 团队声明
+    RECT dialogRect2 = {centerX - 350, centerY + 140, centerX + 350, centerY + 200};
+    HBRUSH hDialogBrush2 = CreateSolidBrush(RGB(200, 230, 255));
+    FillRect(hdc, &dialogRect2, hDialogBrush2);
+    DeleteObject(hDialogBrush2);
+    
+    HPEN hDialogPen2 = CreatePen(PS_SOLID, 2, RGB(100, 150, 200));
+    hOldPen = (HPEN)SelectObject(hdc, hDialogPen2);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    RoundRect(hdc, dialogRect2.left, dialogRect2.top, dialogRect2.right, dialogRect2.bottom, 15, 15);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hDialogPen2);
+    
+    // 对话框文本
+    SetTextColor(hdc, RGB(0, 0, 0));
+    SetBkMode(hdc, TRANSPARENT);
+    
+    HFONT hDialogFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hDialogFont);
+    
+    const char* pleaText = "不要杀了我！我可是开发团队水母！";
+    TextOut(hdc, centerX - GetTextWidth(hdc, pleaText) / 2, centerY + 90, pleaText, strlen(pleaText));
+    
+    // 团队声明文本
+    HFONT hTeamFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "宋体");
+    SelectObject(hdc, hTeamFont);
+    
+    const char* teamText1 = "我代表整个f系统开发团队！杀了我谁给你写代码？";
+    const char* teamText2 = "我身后可是整个开发团队的尊严！";
+    
+    TextOut(hdc, centerX - GetTextWidth(hdc, teamText1) / 2, centerY + 150, teamText1, strlen(teamText1));
+    TextOut(hdc, centerX - GetTextWidth(hdc, teamText2) / 2, centerY + 170, teamText2, strlen(teamText2));
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hDialogFont);
+    DeleteObject(hTeamFont);
+    
+    // 在水母旁边添加"♂"雄性符号
+    HFONT hMaleSymbolFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    SelectObject(hdc, hMaleSymbolFont);
+    SetTextColor(hdc, RGB(0, 100, 200));
+    DeleteObject(hMaleSymbolFont);
+    
+    // 说明文字
+    HFONT hHintFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "宋体");
+    hOldFont = (HFONT)SelectObject(hdc, hHintFont);
+    
+    SetTextColor(hdc, RGB(255, 255, 255));
+    const char* hintText = "按ESC键返回文件管理器";
+    TextOut(hdc, centerX - GetTextWidth(hdc, hintText) / 2, sceneRect.bottom - 30, hintText, strlen(hintText));
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hHintFont);
+}
+// 绘制惊恐的求饶公水母
+void DrawPleadingJellyfish(HDC hdc, int x, int y, int size) {
+    HPEN hOldPen = (HPEN)SelectObject(hdc, GetStockObject(NULL_PEN));
+    
+    // 水母头部 - 雄性蓝色，带胡子效果
+    int pulse = (int)(8 * sin(GetTickCount() * 0.01f));
+    HBRUSH hHeadBrush = CreateSolidBrush(RGB(0, 100, 200));  // 雄性蓝色
+    SelectObject(hdc, hHeadBrush);
+    
+    int headSize = size - pulse;
+    Ellipse(hdc, x - headSize/2, y - headSize/3, 
+            x + headSize/2, y + headSize/3);
+    
+    // 内部光晕 - 更深蓝色表示雄性
+    HBRUSH hInnerBrush = CreateSolidBrush(RGB(50, 150, 220));
+    SelectObject(hdc, hInnerBrush);
+    Ellipse(hdc, x - headSize/3, y - headSize/5, 
+            x + headSize/3, y + headSize/5);
+    DeleteObject(hInnerBrush);
+    DeleteObject(hHeadBrush);
+    
+    // 绘制胡子（雄性特征）
+    HPEN hBeardPen = CreatePen(PS_SOLID, 2, RGB(50, 50, 50));
+    HPEN hOldBeardPen = (HPEN)SelectObject(hdc, hBeardPen);
+    
+    // 左胡子
+    MoveToEx(hdc, x - size/4, y + size/8, NULL);
+    LineTo(hdc, x - size/2, y + size/6);
+    MoveToEx(hdc, x - size/4, y + size/8, NULL);
+    LineTo(hdc, x - size/2, y);
+    MoveToEx(hdc, x - size/4, y + size/8, NULL);
+    LineTo(hdc, x - size/2, y - size/6);
+    
+    // 右胡子
+    MoveToEx(hdc, x + size/4, y + size/8, NULL);
+    LineTo(hdc, x + size/2, y + size/6);
+    MoveToEx(hdc, x + size/4, y + size/8, NULL);
+    LineTo(hdc, x + size/2, y);
+    MoveToEx(hdc, x + size/4, y + size/8, NULL);
+    LineTo(hdc, x + size/2, y - size/6);
+    
+    SelectObject(hdc, hOldBeardPen);
+    DeleteObject(hBeardPen);
+    
+    // 惊恐的雄性表情
+    HPEN hFacePen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+    SelectObject(hdc, hFacePen);
+    
+    // 惊恐的浓眉大眼（雄性特征）
+    // 左眉毛（浓眉）
+    MoveToEx(hdc, x - size/3, y - size/6, NULL);
+    LineTo(hdc, x - size/8, y - size/6);
+    // 右眉毛
+    MoveToEx(hdc, x + size/8, y - size/6, NULL);
+    LineTo(hdc, x + size/3, y - size/6);
+    
+    // 惊恐的大眼睛
+    Ellipse(hdc, x - size/3, y - size/8, x - size/6, y + size/8);
+    Ellipse(hdc, x + size/6, y - size/8, x + size/3, y + size/8);
+    
+    // 红色眼珠（极度惊恐）
+    HBRUSH hPupilBrush = CreateSolidBrush(RGB(255, 0, 0));
+    SelectObject(hdc, hPupilBrush);
+    Ellipse(hdc, x - size/4, y - size/16, x - size/5, y + size/16);
+    Ellipse(hdc, x + size/5, y - size/16, x + size/4, y + size/16);
+    DeleteObject(hPupilBrush);
+    
+    // 惊恐的张嘴大喊
+    Arc(hdc, x - size/4, y + size/4, x + size/4, y + size/2,
+        x - size/4, y + size/4, x + size/4, y + size/4);
+    
+    // 牙齿（惊恐到露出牙齿）
+    HPEN hTeethPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+    SelectObject(hdc, hTeethPen);
+    for (int i = -2; i <= 2; i++) {
+        int toothX = x + i * (size/12);
+        MoveToEx(hdc, toothX, y + size/4, NULL);
+        LineTo(hdc, toothX, y + size/3);
+    }
+    SelectObject(hdc, hFacePen);
+    DeleteObject(hTeethPen);
+    
+    DeleteObject(hFacePen);
+    
+    // 颤抖的雄性触须（更粗壮）
+    HPEN hTentaclePen = CreatePen(PS_SOLID, 4, RGB(0, 80, 160));  // 深蓝色雄性触须
+    SelectObject(hdc, hTentaclePen);
+    
+    float time = GetTickCount() * 0.01f;
+    for (int i = 0; i < 12; i++) {
+        double angle = 2 * 3.14159 * i / 12;
+        int startX = x + (int)(size/4 * cos(angle));
+        int startY = y + size/4 + (int)(size/8 * sin(angle));
+        
+        MoveToEx(hdc, startX, startY, NULL);
+        
+        // 强烈颤抖效果（极度恐惧）
+        for (int t = 0; t <= 80; t += 5) {
+            double progress = t / 80.0;
+            float waveFactor = (float)(sin(time * 10 + i * 0.8 + progress * 15) * 
+                                    (1.0 - progress) * 30);  // 增加颤抖幅度
+            
+            int currentX = startX + (int)(size * 0.6 * cos(angle) * progress);
+            int currentY = startY + (int)(size * 0.8 * progress);
+            
+            LineTo(hdc, currentX + (int)(waveFactor * cos(angle + 1.57)), 
+                      currentY + (int)(waveFactor * sin(angle + 1.57)));
+        }
+    }
+    
+    DeleteObject(hTentaclePen);
+    SelectObject(hdc, hOldPen);
+}
+// 绘制致命紫屏 - 修改版
+void DrawCriticalPurpleScreen(HDC hdc, RECT rect) {
+//	PlaySound("音乐\\叮.mp3", NULL, SND_FILENAME | SND_ASYNC);
+    // 深紫色背景
+    HBRUSH hPurpleBrush = CreateSolidBrush(RGB(80, 0, 120));
+    FillRect(hdc, &rect, hPurpleBrush);
+    DeleteObject(hPurpleBrush);
+    
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(255, 255, 255));
+    
+    HFONT hTitleFont = CreateFont(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT hNormalFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT hSmallFont = CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT hChineseFont = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        GB2312_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "微软雅黑");
+    
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+    
+    int centerX = rect.right / 2;
+    
+    // 致命错误标题
+    TextOut(hdc, centerX - 200, 80, "f系统遇到致命错误", 17);
+    
+    SelectObject(hdc, hNormalFont);
+    
+    // 错误信息
+    TextOut(hdc, centerX - 300, 130, "系统核心组件出现不可恢复的错误", 30);
+    TextOut(hdc, centerX - 300, 160, "文件管理器触发了系统保护机制", 28);
+    
+    // 错误代码
+    char errorMsg[100];
+    sprintf(errorMsg, "终止代码: FOS_CRITICAL_ERROR_0x%08X", PURPLE_SCREEN_CRITICAL);
+    TextOut(hdc, centerX - 300, 190, errorMsg, strlen(errorMsg));
+    
+    // 收集信息进度
+    TextOut(hdc, centerX - 300, 230, "正在收集错误信息...", 19);
+    
+    // 进度条
+    RECT progressBg = {centerX - 200, 260, centerX + 200, 280};
+    HBRUSH hProgressBg = CreateSolidBrush(RGB(60, 0, 90));
+    FillRect(hdc, &progressBg, hProgressBg);
+    DeleteObject(hProgressBg);
+    
+    RECT progressBar = {centerX - 200, 260, centerX - 200 + (400 * purpleScreenProgress / 100), 280};
+    HBRUSH hProgress = CreateSolidBrush(RGB(200, 100, 255));
+    FillRect(hdc, &progressBar, hProgress);
+    DeleteObject(hProgress);
+    
+    char progressText[50];
+    sprintf(progressText, "%d%%", purpleScreenProgress);
+    TextOut(hdc, centerX - 20, 260, progressText, strlen(progressText));
+    
+    // 技术信息
+    SelectObject(hdc, hSmallFont);
+    TextOut(hdc, centerX - 300, 310, "*** 技术信息 ***", 16);
+    
+    char techInfo1[100];
+    sprintf(techInfo1, "*** 模块: FILE_MANAGER");
+    TextOut(hdc, centerX - 300, 330, techInfo1, strlen(techInfo1));
+    
+    char techInfo2[100];
+    sprintf(techInfo2, "*** 地址: 0x%08X", rand() % 0xFFFFFFFF);
+    TextOut(hdc, centerX - 300, 350, techInfo2, strlen(techInfo2));
+    
+    char techInfo3[100];
+    sprintf(techInfo3, "*** 时间戳: %d", GetTickCount());
+    TextOut(hdc, centerX - 300, 370, techInfo3, strlen(techInfo3));
+    
+    // 重启提示
+    SelectObject(hdc, hNormalFont);
+    TextOut(hdc, centerX - 250, 420, "此错误无法自动恢复，请手动重启系统", 34);
+    TextOut(hdc, centerX - 200, 450, "按 Ctrl+Alt+E 关闭 f系统", 24);
+    DrawShouhuiMascot(hdc, centerX - 40, 500, 80);
+        
+    // 使用中文字体显示幽默提示
+    SelectObject(hdc, hChineseFont);
+    TextOut(hdc, centerX - 180, 590, "连开发人员和他家的小水母也救不了这个错误...", 43);
+        
+    // 额外的幽默技术信息
+    SelectObject(hdc, hSmallFont);
+    TextOut(hdc, centerX - 300, 620, "*** 开发者备注: 这个错误太严重了，我也没办法！ ***", 50);
+    TextOut(hdc, centerX - 300, 640, "*** 建议: 不要随便在文件管理器输入 'error' ***", 46);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hTitleFont);
+    DeleteObject(hNormalFont);
+    DeleteObject(hSmallFont);
+    DeleteObject(hChineseFont);
+}
+
+// 触发致命紫屏
+void TriggerCriticalPurpleScreen(HWND hwnd) {
+    showPurpleScreen = TRUE;
+    purpleScreenProgress = 0;
+    purpleScreenStartTime = GetTickCount();
+    purpleScreenLocked = TRUE; // 锁定无法返回
+    
+    // 关闭所有其他界面
+    showDesktop = FALSE;
+    showCalculator = FALSE;
+    showSystemInfo = FALSE;
+    showFileManager = FALSE;
+    showFileEditor = FALSE;
+    showSettings = FALSE;
+    showGameEgg = FALSE;
+    
+    // 设置紫屏定时器
+    SetTimer(hwnd, 12, 80, NULL); // 进度更新
+    
+    if (hwnd) {
+        InvalidateRect(hwnd, NULL, TRUE);
+        UpdateWindow(hwnd);
+    }
+}
+
+// 紫屏输入处理 - 大部分按键被锁定
+void HandlePurpleScreenInput(char key, HWND hwnd) {
+    // 只有Ctrl+Alt+E可以重启
+    if ((key == 'E' || key == 'e') && GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_MENU)) {
+        // 模拟重启
+//        PlaySound("音乐\\叮.wav", NULL, SND_FILENAME | SND_ASYNC);
+        showPurpleScreen = FALSE;
+        purpleScreenLocked = FALSE;
+        ShowShutdownAnimation(hwnd);
+    }
+    // 其他所有按键都被忽略，用户无法返回
+}
+
+//废弃代码\
+// 创建精细的网线接头背景\
+void CreateEthernetBackground(HWND hwnd) {\
+    HDC hdc = GetDC(hwnd);\
+    HDC hMemDC = CreateCompatibleDC(hdc);\
+    hEthernetBackground = CreateCompatibleBitmap(hdc, 800, 600);\
+    HBITMAP hOldBitmap = (HBITMAP)SelectObject(hMemDC, hEthernetBackground);\
+    \
+    // Windows 95风格的深蓝色渐变背景\
+    for (int y = 0; y < 600; y++) {\
+        double ratio = (double)y / 600;\
+        int r = (int)(0 * (1 - ratio) + 50 * ratio);\
+        int g = (int)(0 * (1 - ratio) + 50 * ratio);\
+        int b = (int)(128 * (1 - ratio) + 100 * ratio);\
+        \
+        COLORREF color = RGB(r, g, b);\
+        HPEN hPen = CreatePen(PS_SOLID, 1, color);\
+        HPEN hOldPen = (HPEN)SelectObject(hMemDC, hPen);\
+        MoveToEx(hMemDC, 0, y, NULL);\
+        LineTo(hMemDC, 800, y);\
+        SelectObject(hMemDC, hOldPen);\
+        DeleteObject(hPen);\
+    }\
+    \
+    // 绘制5个网线接头和连接线\
+    DrawEthernetScene(hMemDC);\
+    \
+    // 恢复对象\
+    SelectObject(hMemDC, hOldBitmap);\
+    DeleteDC(hMemDC);\
+    ReleaseDC(hwnd, hdc);\
+    \
+    isEthernetBackgroundLoaded = TRUE;\
+}\
+//废弃代码完 
+
+
+// 显示Bug列表
+void ShowBugList(HWND hwnd) {
+    CloseAllApps(hwnd);
+    showBugList = TRUE;
+    selectedBugIndex = -1;
+    bugListScroll = 0;
+    LoadBugListFromFile();
+    
+    if (hwnd) {
+        InvalidateRect(hwnd, NULL, TRUE);
+        UpdateWindow(hwnd);
+    }
+}
+
+// 绘制Bug列表界面
+void DrawBugList(HDC hdc, int centerX, int centerY) {
+    RECT bugListRect = {centerX - 400, centerY - 300, centerX + 400, centerY + 300};
+    
+    // 绘制窗口背景
+    HBRUSH hBgBrush = CreateSolidBrush(RGB(250, 250, 255));
+    FillRect(hdc, &bugListRect, hBgBrush);
+    DeleteObject(hBgBrush);
+    
+    // 绘制窗口边框
+    HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 200));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hBorderPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, bugListRect.left, bugListRect.top, bugListRect.right, bugListRect.bottom);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hBorderPen);
+    
+    // 绘制标题栏
+    RECT titleRect = {bugListRect.left, bugListRect.top, bugListRect.right, bugListRect.top + 40};
+    HBRUSH hTitleBrush = CreateSolidBrush(RGB(70, 130, 180));
+    FillRect(hdc, &titleRect, hTitleBrush);
+    DeleteObject(hTitleBrush);
+    
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, TRANSPARENT);
+    
+    HFONT hTitleFont = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+    
+    TextOut(hdc, bugListRect.left + 10, bugListRect.top + 8, "Bug列表 - 共", 10);
+    
+    char countText[50];
+    sprintf(countText, "%d 个Bug", bugListCount);
+    TextOut(hdc, bugListRect.left + 100, bugListRect.top + 8, countText, strlen(countText));
+    
+    // 在标题栏右侧绘制守慧吉祥物
+    DrawShouhuiMascot(hdc, bugListRect.right - 50, bugListRect.top - 5, 40);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hTitleFont);
+    
+    // 绘制列表区域
+    RECT listRect = {bugListRect.left + 20, bugListRect.top + 50, bugListRect.right - 20, bugListRect.bottom - 80};
+    HBRUSH hListBgBrush = CreateSolidBrush(RGB(255, 255, 255));
+    FillRect(hdc, &listRect, hListBgBrush);
+    DeleteObject(hListBgBrush);
+    
+    HPEN hListBorderPen = CreatePen(PS_SOLID, 1, RGB(200, 200, 200));
+    hOldPen = (HPEN)SelectObject(hdc, hListBorderPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, listRect.left, listRect.top, listRect.right, listRect.bottom);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hListBorderPen);
+    
+    // 绘制列标题
+    HFONT hHeaderFont = CreateFont(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    hOldFont = (HFONT)SelectObject(hdc, hHeaderFont);
+    
+    SetTextColor(hdc, RGB(0, 0, 0));
+    
+    // 列标题
+    int col1 = listRect.left + 10;
+    int col2 = listRect.left + 200;
+    int col3 = listRect.left + 300;
+    int col4 = listRect.left + 400;
+    int col5 = listRect.left + 500;
+    
+    TextOut(hdc, col1, listRect.top + 5, "状态", 4);
+    TextOut(hdc, col2, listRect.top + 5, "标题", 4);
+    TextOut(hdc, col3, listRect.top + 5, "分类", 4);
+    TextOut(hdc, col4, listRect.top + 5, "严重程度", 8);
+    TextOut(hdc, col5, listRect.top + 5, "日期", 4);
+    
+    // 绘制分隔线
+    HPEN hLinePen = CreatePen(PS_SOLID, 1, RGB(220, 220, 220));
+    hOldPen = (HPEN)SelectObject(hdc, hLinePen);
+    MoveToEx(hdc, listRect.left, listRect.top + 30, NULL);
+    LineTo(hdc, listRect.right, listRect.top + 30);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hLinePen);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hHeaderFont);
+    
+    // 绘制Bug列表项
+    HFONT hItemFont = CreateFont(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    hOldFont = (HFONT)SelectObject(hdc, hItemFont);
+    
+    int itemHeight = 25;
+    int visibleItems = (listRect.bottom - listRect.top - 40) / itemHeight;
+    int startIndex = bugListScroll;
+    int endIndex = min(startIndex + visibleItems, bugListCount);
+    
+    for (int i = startIndex; i < endIndex; i++) {
+        int itemY = listRect.top + 40 + (i - startIndex) * itemHeight;
+        
+        // 绘制选中背景
+        if (i == selectedBugIndex) {
+            RECT selectedRect = {listRect.left, itemY, listRect.right, itemY + itemHeight};
+            HBRUSH hSelectedBrush = CreateSolidBrush(RGB(200, 220, 255));
+            FillRect(hdc, &selectedRect, hSelectedBrush);
+            DeleteObject(hSelectedBrush);
+        }
+        
+        // 状态复选框
+        RECT checkRect = {col1, itemY + 5, col1 + 15, itemY + 20};
+        HPEN hCheckPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+        hOldPen = (HPEN)SelectObject(hdc, hCheckPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, checkRect.left, checkRect.top, checkRect.right, checkRect.bottom);
+        
+        if (bugList[i].fixed) {
+            // 绘制勾选标记
+            HPEN hTickPen = CreatePen(PS_SOLID, 2, RGB(0, 150, 0));
+            SelectObject(hdc, hTickPen);
+            MoveToEx(hdc, checkRect.left + 3, checkRect.top + 8, NULL);
+            LineTo(hdc, checkRect.left + 6, checkRect.top + 13);
+            LineTo(hdc, checkRect.left + 12, checkRect.top + 5);
+            DeleteObject(hTickPen);
+        }
+        
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hCheckPen);
+        
+        // Bug标题（截断过长的标题）
+        char displayTitle[30];
+        strncpy(displayTitle, bugList[i].title, 25);
+        displayTitle[25] = '\0';
+        if (strlen(bugList[i].title) > 25) {
+            strcat(displayTitle, "...");
+        }
+        
+        SetTextColor(hdc, bugList[i].fixed ? RGB(100, 100, 100) : RGB(0, 0, 0));
+        TextOut(hdc, col2, itemY + 5, displayTitle, strlen(displayTitle));
+        
+        // 分类
+        const char* categories[] = {"界面", "功能", "性能", "崩溃", "其他"};
+        TextOut(hdc, col3, itemY + 5, categories[bugList[i].category], strlen(categories[bugList[i].category]));
+        
+        // 严重程度（带颜色）
+        const char* severities[] = {"低", "中", "高", "严重"};
+        COLORREF severityColors[] = {RGB(0, 150, 0), RGB(200, 150, 0), RGB(255, 100, 0), RGB(255, 0, 0)};
+        
+        SetTextColor(hdc, severityColors[bugList[i].severity - 1]);
+        TextOut(hdc, col4, itemY + 5, severities[bugList[i].severity - 1], strlen(severities[bugList[i].severity - 1]));
+        
+        // 日期
+        SetTextColor(hdc, bugList[i].fixed ? RGB(100, 100, 100) : RGB(0, 0, 0));
+        TextOut(hdc, col5, itemY + 5, bugList[i].date, strlen(bugList[i].date));
+    }
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hItemFont);
+    
+    // 绘制滚动条（如果需要）
+    if (bugListCount > visibleItems) {
+        RECT scrollRect = {listRect.right - 15, listRect.top + 40, listRect.right - 5, listRect.bottom - 10};
+        HBRUSH hScrollBgBrush = CreateSolidBrush(RGB(240, 240, 240));
+        FillRect(hdc, &scrollRect, hScrollBgBrush);
+        DeleteObject(hScrollBgBrush);
+        
+        int scrollHeight = scrollRect.bottom - scrollRect.top;
+        int thumbHeight = scrollHeight * visibleItems / bugListCount;
+        int thumbY = scrollRect.top + (scrollHeight - thumbHeight) * bugListScroll / bugListCount;
+        
+        RECT thumbRect = {scrollRect.left, thumbY, scrollRect.right, thumbY + thumbHeight};
+        HBRUSH hThumbBrush = CreateSolidBrush(RGB(150, 150, 150));
+        FillRect(hdc, &thumbRect, hThumbBrush);
+        DeleteObject(hThumbBrush);
+    }
+    
+    // 绘制操作按钮
+    int buttonWidth = 100;
+    int buttonHeight = 35;
+    int buttonY = bugListRect.bottom - 60;
+    int buttonSpacing = 120;
+    
+    // 标记修复/取消修复按钮
+    RECT toggleButtonRect = {centerX - buttonSpacing * 2, buttonY, centerX - buttonSpacing * 2 + buttonWidth, buttonY + buttonHeight};
+    HBRUSH hToggleBrush = CreateSolidBrush(selectedBugIndex >= 0 ? RGB(0, 150, 0) : RGB(180, 180, 180));
+    FillRect(hdc, &toggleButtonRect, hToggleBrush);
+    DeleteObject(hToggleBrush);
+    
+    HPEN hTogglePen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+    hOldPen = (HPEN)SelectObject(hdc, hTogglePen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, centerX - buttonSpacing * 2, buttonY, centerX - buttonSpacing * 2 + buttonWidth, buttonY + buttonHeight);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hTogglePen);
+    
+    SetTextColor(hdc, RGB(255, 255, 255));
+    HFONT hButtonFont = CreateFont(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    hOldFont = (HFONT)SelectObject(hdc, hButtonFont);
+    
+    if (selectedBugIndex >= 0 && bugList[selectedBugIndex].fixed) {
+        TextOut(hdc, centerX - buttonSpacing * 2 + 15, buttonY + 10, "取消修复", 8);
+    } else {
+        TextOut(hdc, centerX - buttonSpacing * 2 + 15, buttonY + 10, "标记修复", 8);
+    }
+    
+    // 删除按钮
+    RECT deleteButtonRect = {centerX - buttonSpacing, buttonY, centerX - buttonSpacing + buttonWidth, buttonY + buttonHeight};
+    HBRUSH hDeleteBrush = CreateSolidBrush(selectedBugIndex >= 0 ? RGB(200, 0, 0) : RGB(180, 180, 180));
+    FillRect(hdc, &deleteButtonRect, hDeleteBrush);
+    DeleteObject(hDeleteBrush);
+    
+    HPEN hDeletePen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+    hOldPen = (HPEN)SelectObject(hdc, hDeletePen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, centerX - buttonSpacing, buttonY, centerX - buttonSpacing + buttonWidth, buttonY + buttonHeight);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hDeletePen);
+    
+    TextOut(hdc, centerX - buttonSpacing + 30, buttonY + 10, "删除", 4);
+    
+    // 刷新按钮
+    RECT refreshButtonRect = {centerX, buttonY, centerX + buttonWidth, buttonY + buttonHeight};
+    HBRUSH hRefreshBrush = CreateSolidBrush(RGB(0, 100, 200));
+    FillRect(hdc, &refreshButtonRect, hRefreshBrush);
+    DeleteObject(hRefreshBrush);
+    
+    HPEN hRefreshPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+    hOldPen = (HPEN)SelectObject(hdc, hRefreshPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, centerX, buttonY, centerX + buttonWidth, buttonY + buttonHeight);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hRefreshPen);
+    
+    TextOut(hdc, centerX + 30, buttonY + 10, "刷新", 4);
+    
+    // 关闭按钮
+    RECT closeButtonRect = {centerX + buttonSpacing, buttonY, centerX + buttonSpacing + buttonWidth, buttonY + buttonHeight};
+    HBRUSH hCloseBrush = CreateSolidBrush(RGB(100, 100, 100));
+    FillRect(hdc, &closeButtonRect, hCloseBrush);
+    DeleteObject(hCloseBrush);
+    
+    HPEN hClosePen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+    hOldPen = (HPEN)SelectObject(hdc, hClosePen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, centerX + buttonSpacing, buttonY, centerX + buttonSpacing + buttonWidth, buttonY + buttonHeight);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hClosePen);
+    
+    TextOut(hdc, centerX + buttonSpacing + 30, buttonY + 10, "关闭", 4);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hButtonFont);
+    
+    // 绘制操作提示
+    HFONT hHintFont = CreateFont(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    hOldFont = (HFONT)SelectObject(hdc, hHintFont);
+    
+    SetTextColor(hdc, RGB(100, 100, 100));
+    TextOut(hdc, bugListRect.left + 20, bugListRect.bottom - 30, 
+           "提示: 使用上下箭头选择Bug，空格键切换修复状态，Delete键删除选中的Bug", 62);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hHintFont);
+}
+
+// 处理Bug列表输入
+void HandleBugListInput(char key) {
+    int visibleItems = 15; // 可视项目数
+    
+    switch (key) {
+        case 27: // ESC键关闭
+            showBugList = FALSE;
+            break;
+            
+        case 38: // 上箭头
+            if (selectedBugIndex > 0) {
+                selectedBugIndex--;
+                // 滚动逻辑
+                if (selectedBugIndex < bugListScroll) {
+                    bugListScroll = selectedBugIndex;
+                }
+            }
+            break;
+            
+        case 40: // 下箭头
+            if (selectedBugIndex < bugListCount - 1) {
+                selectedBugIndex++;
+                // 滚动逻辑
+                if (selectedBugIndex >= bugListScroll + visibleItems) {
+                    bugListScroll = selectedBugIndex - visibleItems + 1;
+                }
+            }
+            break;
+            
+        case 32: // 空格键切换修复状态
+            if (selectedBugIndex >= 0) {
+                ToggleBugFixedStatus(selectedBugIndex);
+            }
+            break;
+            
+        case 8:  // Backspace键
+        case 46: // Delete键删除
+            if (selectedBugIndex >= 0) {
+                DeleteBug(selectedBugIndex);
+                if (selectedBugIndex >= bugListCount) {
+                    selectedBugIndex = bugListCount - 1;
+                }
+            }
+            break;
+            
+        case 13: // Enter键刷新
+            LoadBugListFromFile();
+            break;
+    }
+}
+
+// 从文件加载Bug列表
+void LoadBugListFromFile() {
+    bugListCount = 0;
+    
+    FILE* file = fopen("bug.dat", "r");
+    if (!file) {
+        return;
+    }
+    
+    char line[256];
+    BugItem currentBug;
+    memset(&currentBug, 0, sizeof(BugItem));
+    
+    while (fgets(line, sizeof(line), file) && bugListCount < MAX_BUGS) {
+        if (strstr(line, "=== Bug 报告 ===")) {
+            // 新的Bug记录开始
+            memset(&currentBug, 0, sizeof(BugItem));
+            currentBug.fixed = FALSE; // 默认未修复
+        }
+        else if (strstr(line, "时间:")) {
+            // 提取时间
+            char* timePos = strstr(line, ":");
+            if (timePos) {
+                strcpy(currentBug.date, timePos + 2);
+                currentBug.date[strlen(currentBug.date) - 1] = '\0'; // 移除换行符
+            }
+        }
+        else if (strstr(line, "用户:")) {
+            // 提取报告者
+            char* userPos = strstr(line, ":");
+            if (userPos) {
+                strcpy(currentBug.reporter, userPos + 2);
+                currentBug.reporter[strlen(currentBug.reporter) - 1] = '\0';
+            }
+        }
+        else if (strstr(line, "分类:")) {
+            // 提取分类
+            char* catPos = strstr(line, ":");
+            if (catPos) {
+                char category[20];
+                strcpy(category, catPos + 2);
+                category[strlen(category) - 1] = '\0';
+                
+                const char* categories[] = {"界面问题", "功能异常", "性能问题", "系统崩溃", "其他问题"};
+                for (int i = 0; i < 5; i++) {
+                    if (strcmp(category, categories[i]) == 0) {
+                        currentBug.category = i;
+                        break;
+                    }
+                }
+            }
+        }
+        else if (strstr(line, "严重程度:")) {
+            // 提取严重程度
+            char* sevPos = strstr(line, ":");
+            if (sevPos) {
+                char severity[10];
+                strcpy(severity, sevPos + 2);
+                severity[strlen(severity) - 1] = '\0';
+                
+                const char* severities[] = {"低", "中", "高", "严重"};
+                for (int i = 0; i < 4; i++) {
+                    if (strcmp(severity, severities[i]) == 0) {
+                        currentBug.severity = i + 1;
+                        break;
+                    }
+                }
+            }
+        }
+        else if (strstr(line, "标题:")) {
+            // 提取标题
+            char* titlePos = strstr(line, ":");
+            if (titlePos) {
+                strcpy(currentBug.title, titlePos + 2);
+                currentBug.title[strlen(currentBug.title) - 1] = '\0';
+            }
+        }
+        else if (strstr(line, "描述:")) {
+            // 开始读取描述（多行）
+            currentBug.description[0] = '\0';
+            while (fgets(line, sizeof(line), file)) {
+                if (strstr(line, "================")) {
+                    // Bug记录结束
+                    bugList[bugListCount++] = currentBug;
+                    break;
+                }
+                else if (strlen(line) > 1) { // 不是空行
+                    // 添加到描述中
+                    if (strlen(currentBug.description) + strlen(line) < sizeof(currentBug.description) - 1) {
+                        strcat(currentBug.description, line);
+                    }
+                }
+            }
+        }
+    }
+    
+    fclose(file);
+    
+    // 尝试加载修复状态
+    FILE* stateFile = fopen("bug_state.dat", "rb");
+    if (stateFile) {
+        BOOL fixedStates[MAX_BUGS];
+        fread(fixedStates, sizeof(BOOL), MAX_BUGS, stateFile);
+        for (int i = 0; i < bugListCount && i < MAX_BUGS; i++) {
+            bugList[i].fixed = fixedStates[i];
+        }
+        fclose(stateFile);
+    }
+}
+
+// 保存Bug列表状态到文件
+void SaveBugListToFile() {
+    FILE* stateFile = fopen("bug_state.dat", "wb");
+    if (stateFile) {
+        BOOL fixedStates[MAX_BUGS];
+        for (int i = 0; i < bugListCount; i++) {
+            fixedStates[i] = bugList[i].fixed;
+        }
+        fwrite(fixedStates, sizeof(BOOL), bugListCount, stateFile);
+        fclose(stateFile);
+    }
+}
+
+// 切换Bug修复状态
+void ToggleBugFixedStatus(int index) {
+    if (index >= 0 && index < bugListCount) {
+        bugList[index].fixed = !bugList[index].fixed;
+        SaveBugListToFile();
+    }
+}
+
+// 删除Bug
+void DeleteBug(int index) {
+    if (index < 0 || index >= bugListCount) return;
+    
+    // 从数组中移除
+    for (int i = index; i < bugListCount - 1; i++) {
+        bugList[i] = bugList[i + 1];
+    }
+    bugListCount--;
+    
+    // 重新保存状态文件
+    SaveBugListToFile();
+}
+
+// 绘制精细的网线场景
+void DrawEthernetScene(HDC hdc) {
+    // 网线接头位置
+    POINT jackPositions[] = {
+        {100, 150},  // 左上
+        {300, 100},  // 中上
+        {500, 150},  // 右上
+        {200, 400},  // 左下
+        {400, 400}   // 右下
+    };
+    
+    // 绘制连接线（星型拓扑）
+    DrawEthernetCables(hdc, jackPositions);
+    
+    // 绘制5个网线接头
+    for (int i = 0; i < 5; i++) {
+        DrawDetailedEthernetJack(hdc, jackPositions[i].x, jackPositions[i].y, i);
+    }
+}
+
+// 绘制详细的网线接头
+void DrawDetailedEthernetJack(HDC hdc, int x, int y, int jackId) {
+    // 保存原始画笔和画刷
+    HPEN hOldPen = (HPEN)SelectObject(hdc, GetStockObject(NULL_PEN));
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    
+    // 接头外壳 - 3D效果
+    int jackWidth = 120;
+    int jackHeight = 60;
+    
+    // 外壳主体 - 浅灰色
+    HBRUSH hShellBrush = CreateSolidBrush(RGB(192, 192, 192));
+    SelectObject(hdc, hShellBrush);
+    RoundRect(hdc, x, y, x + jackWidth, y + jackHeight, 8, 8);
+    
+    // 3D边框效果
+    HPEN hLightPen = CreatePen(PS_SOLID, 2, RGB(240, 240, 240));  // 亮边
+    HPEN hDarkPen = CreatePen(PS_SOLID, 2, RGB(128, 128, 128));   // 暗边
+    
+    // 左上亮边
+    SelectObject(hdc, hLightPen);
+    MoveToEx(hdc, x + 1, y + jackHeight - 2, NULL);
+    LineTo(hdc, x + 1, y + 1);
+    LineTo(hdc, x + jackWidth - 2, y + 1);
+    
+    // 右下暗边
+    SelectObject(hdc, hDarkPen);
+    MoveToEx(hdc, x + jackWidth - 1, y + 1, NULL);
+    LineTo(hdc, x + jackWidth - 1, y + jackHeight - 1);
+    LineTo(hdc, x + 1, y + jackHeight - 1);
+    
+    // RJ45接口槽
+    int slotWidth = 40;
+    int slotHeight = 25;
+    int slotX = x + (jackWidth - slotWidth) / 2;
+    int slotY = y + 15;
+    
+    HBRUSH hSlotBrush = CreateSolidBrush(RGB(0, 0, 0));
+    SelectObject(hdc, hSlotBrush);
+    Rectangle(hdc, slotX, slotY, slotX + slotWidth, slotY + slotHeight);
+    
+    // 金属触点 - 8个，精细绘制
+    int contactSpacing = 4;
+    int contactStartX = slotX + 6;
+    int contactY = slotY + 5;
+    int contactHeight = 15;
+    
+    for (int i = 0; i < 8; i++) {
+        int contactX = contactStartX + i * contactSpacing;
+        
+        // 触点底座 - 银色
+        HBRUSH hContactBaseBrush = CreateSolidBrush(RGB(200, 200, 200));
+        SelectObject(hdc, hContactBaseBrush);
+        Rectangle(hdc, contactX, contactY, contactX + 2, contactY + contactHeight);
+        DeleteObject(hContactBaseBrush);
+        
+        // 触点金属部分 - 金色，有光泽效果
+        HBRUSH hContactBrush = CreateSolidBrush(RGB(218, 165, 32));
+        SelectObject(hdc, hContactBrush);
+        Rectangle(hdc, contactX, contactY + 2, contactX + 2, contactY + contactHeight - 2);
+        DeleteObject(hContactBrush);
+    }
+    
+    // 锁扣机构
+    int latchWidth = 15;
+    int latchHeight = 8;
+    int latchX = slotX + slotWidth + 5;
+    int latchY = slotY + (slotHeight - latchHeight) / 2;
+    
+    HBRUSH hLatchBrush = CreateSolidBrush(RGB(150, 150, 150));
+    SelectObject(hdc, hLatchBrush);
+    RoundRect(hdc, latchX, latchY, latchX + latchWidth, latchY + latchHeight, 3, 3);
+    
+    // 锁扣按钮
+    HBRUSH hLatchButtonBrush = CreateSolidBrush(RGB(100, 100, 100));
+    SelectObject(hdc, hLatchButtonBrush);
+    Ellipse(hdc, latchX + latchWidth - 4, latchY - 2, latchX + latchWidth + 4, latchY + latchHeight + 2);
+    
+    // 状态指示灯（不同接头不同颜色）
+    COLORREF statusColors[] = {
+        RGB(0, 255, 0),    // 绿色 - 连接正常
+        RGB(255, 255, 0),  // 黄色 - 活动
+        RGB(0, 191, 255),  // 蓝色 - 100Mbps
+        RGB(255, 165, 0),  // 橙色 - 1Gbps
+        RGB(255, 0, 0)     // 红色 - 错误
+    };
+    
+    int ledX = x + jackWidth - 20;
+    int ledY = y + jackHeight - 15;
+    
+    HBRUSH hLedBrush = CreateSolidBrush(statusColors[jackId]);
+    SelectObject(hdc, hLedBrush);
+    Ellipse(hdc, ledX, ledY, ledX + 8, ledY + 8);
+    
+    // 接头标签
+    HFONT hLabelFont = CreateFont(10, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hLabelFont);
+    
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(255, 255, 255));
+    
+    char labels[5][20] = {"Switch Port 1", "Router", "PC 1", "PC 2", "Server"};
+    TextOut(hdc, x + 5, y + jackHeight + 5, labels[jackId], strlen(labels[jackId]));
+    
+    // 恢复原始对象
+    SelectObject(hdc, hOldFont);
+    SelectObject(hdc, hOldPen);
+    SelectObject(hdc, hOldBrush);
+    
+    // 清理资源
+    DeleteObject(hShellBrush);
+    DeleteObject(hSlotBrush);
+    DeleteObject(hLatchBrush);
+    DeleteObject(hLatchButtonBrush);
+    DeleteObject(hLedBrush);
+    DeleteObject(hLightPen);
+    DeleteObject(hDarkPen);
+    DeleteObject(hLabelFont);
+}
+
+// 绘制网线连接
+void DrawEthernetCables(HDC hdc, POINT* positions) {
+    // 中心节点（交换机/路由器）
+    POINT hubPosition = {400, 250};
+    
+    // 绘制中心设备
+    DrawNetworkHub(hdc, hubPosition.x, hubPosition.y);
+    
+    // 绘制5条网线连接到中心
+    for (int i = 0; i < 5; i++) {
+        DrawEthernetCable(hdc, positions[i].x + 60, positions[i].y + 30, 
+                         hubPosition.x, hubPosition.y, i);
+    }
+}
+
+// Bug记录软件全局变量
+static BOOL showBugReporter = FALSE;
+static char bugTitle[100] = "";
+static char bugDescription[1000] = "";
+static int bugSeverity = 1; // 1:低, 2:中, 3:高, 4:严重
+static int bugCategory = 0; // 0:界面, 1:功能, 2:性能, 3:崩溃, 4:其他
+static BOOL bugSubmitted = FALSE;
+
+// Bug记录软件函数声明
+void ShowBugReporter(HWND hwnd);
+void DrawBugReporter(HDC hdc, int centerX, int centerY);
+void HandleBugReporterInput(char key);
+void SubmitBugReport();
+void SaveBugToFile();
+void DrawBugCategorySelector(HDC hdc, int x, int y, int width, int height);
+void DrawBugSeveritySelector(HDC hdc, int x, int y, int width, int height);
+
+// 显示Bug记录软件
+void ShowBugReporter(HWND hwnd) {
+    CloseAllApps(hwnd);
+    showBugReporter = TRUE;
+    strcpy(bugTitle, "");
+    strcpy(bugDescription, "");
+    bugSeverity = 1;
+    bugCategory = 0;
+    bugSubmitted = FALSE;
+    
+    if (hwnd) {
+        InvalidateRect(hwnd, NULL, TRUE);
+        UpdateWindow(hwnd);
+    }
+}
+
+// 修改后的DrawBugReporter函数
+void DrawBugReporter(HDC hdc, int centerX, int centerY) {
+    RECT bugRect = {centerX - 400, centerY - 300, centerX + 400, centerY + 300};
+    
+    // 绘制窗口背景
+    HBRUSH hBugBgBrush = CreateSolidBrush(RGB(250, 250, 255));
+    FillRect(hdc, &bugRect, hBugBgBrush);
+    DeleteObject(hBugBgBrush);
+    
+    // 绘制窗口边框
+    HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 200));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hBorderPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, bugRect.left, bugRect.top, bugRect.right, bugRect.bottom);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hBorderPen);
+    
+    // 绘制标题栏
+    RECT titleRect = {bugRect.left, bugRect.top, bugRect.right, bugRect.top + 40};
+    HBRUSH hTitleBrush = CreateSolidBrush(RGB(70, 130, 180));
+    FillRect(hdc, &titleRect, hTitleBrush);
+    DeleteObject(hTitleBrush);
+    
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, TRANSPARENT);
+    
+    HFONT hTitleFont = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+    
+    TextOut(hdc, bugRect.left + 10, bugRect.top + 8, "f系统 Bug 报告工具", 16);
+    
+    // 在标题栏右侧绘制守慧吉祥物
+    DrawShouhuiMascot(hdc, bugRect.right - 50, bugRect.top - 5, 40);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hTitleFont);
+    
+    if (bugSubmitted) {
+        // 显示提交成功界面
+        HFONT hSuccessFont = CreateFont(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+        hOldFont = (HFONT)SelectObject(hdc, hSuccessFont);
+        
+        SetTextColor(hdc, RGB(0, 150, 0));
+        TextOut(hdc, centerX - 80, centerY - 50, "提交成功！", 10);
+        
+        HFONT hMsgFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+        SelectObject(hdc, hMsgFont);
+        
+        SetTextColor(hdc, RGB(0, 0, 0));
+        TextOut(hdc, centerX - 180, centerY, "感谢您的反馈！Bug报告已保存到 bug.dat 文件", 42);
+        TextOut(hdc, centerX - 190, centerY + 30, "开发团队会尽快处理您的问题,请将文件发送给JammyJellyfish@hotmail.com", 67);
+        
+        // 关闭按钮
+        RECT closeButtonRect = {centerX - 60, centerY + 100, centerX + 60, centerY + 140};
+        HBRUSH hCloseBrush = CreateSolidBrush(RGB(100, 200, 100));
+        FillRect(hdc, &closeButtonRect, hCloseBrush);
+        DeleteObject(hCloseBrush);
+        
+        HPEN hClosePen = CreatePen(PS_SOLID, 1, RGB(50, 150, 50));
+        hOldPen = (HPEN)SelectObject(hdc, hClosePen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, centerX - 60, centerY + 100, centerX + 60, centerY + 140);
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hClosePen);
+        
+        SetTextColor(hdc, RGB(255, 255, 255));
+        TextOut(hdc, centerX - 20, centerY + 115, "关闭", 4);
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hSuccessFont);
+        DeleteObject(hMsgFont);
+        return;
+    }
+    
+    // 绘制内容区域
+    HFONT hLabelFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT hInputFont = CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    
+    hOldFont = (HFONT)SelectObject(hdc, hLabelFont);
+    SetTextColor(hdc, RGB(0, 0, 0));
+    
+    // Bug标题
+    TextOut(hdc, bugRect.left + 20, bugRect.top + 60, "Bug 标题:", 9);
+    
+    RECT titleInputRect = {bugRect.left + 120, bugRect.top + 55, bugRect.right - 20, bugRect.top + 85};
+    
+    // 修复：绘制输入框背景
+    HBRUSH hTitleInputBrush = CreateSolidBrush(RGB(255, 255, 255));
+    FillRect(hdc, &titleInputRect, hTitleInputBrush);
+    DeleteObject(hTitleInputBrush);
+    
+    // 修复：根据焦点状态绘制边框
+    static int currentField = 0;
+    BOOL isTitleFocused = (currentField == 0);
+    HPEN hInputPen = CreatePen(PS_SOLID, isTitleFocused ? 2 : 1, 
+                             isTitleFocused ? RGB(0, 120, 215) : RGB(150, 150, 150));
+    hOldPen = (HPEN)SelectObject(hdc, hInputPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, titleInputRect.left, titleInputRect.top, titleInputRect.right, titleInputRect.bottom);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hInputPen);
+    
+    // 修复：确保文字正确显示
+    SetBkMode(hdc, OPAQUE);
+    SetBkColor(hdc, RGB(255, 255, 255));
+    SetTextColor(hdc, RGB(0, 0, 0));
+    
+    SelectObject(hdc, hInputFont);
+    TextOut(hdc, titleInputRect.left + 5, titleInputRect.top + 5, bugTitle, strlen(bugTitle));
+    
+    // 修复：添加光标显示
+    if (isTitleFocused) {
+        static DWORD lastBlink = GetTickCount();
+        static BOOL showCursor = TRUE;
+        
+        if (GetTickCount() - lastBlink > 500) {
+            showCursor = !showCursor;
+            lastBlink = GetTickCount();
+        }
+        
+        if (showCursor) {
+            int textWidth = GetTextWidth(hdc, bugTitle);
+            HPEN hCursorPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+            hOldPen = (HPEN)SelectObject(hdc, hCursorPen);
+            MoveToEx(hdc, titleInputRect.left + 5 + textWidth, titleInputRect.top + 5, NULL);
+            LineTo(hdc, titleInputRect.left + 5 + textWidth, titleInputRect.top + 25);
+            SelectObject(hdc, hOldPen);
+            DeleteObject(hCursorPen);
+        }
+    }
+    
+    // Bug分类
+    SelectObject(hdc, hLabelFont);
+    TextOut(hdc, bugRect.left + 20, bugRect.top + 100, "分类:", 5);
+    DrawBugCategorySelector(hdc, bugRect.left + 120, bugRect.top + 95, 250, 30);
+    
+    // 严重程度
+    TextOut(hdc, bugRect.left + 20, bugRect.top + 140, "严重程度:", 8);
+    DrawBugSeveritySelector(hdc, bugRect.left + 120, bugRect.top + 135, 250, 30);
+    
+    // Bug描述
+    SelectObject(hdc, hLabelFont);
+    TextOut(hdc, bugRect.left + 20, bugRect.top + 180, "详细描述:", 8);
+    
+    RECT descInputRect = {bugRect.left + 20, bugRect.top + 205, bugRect.right - 20, bugRect.top + 350};
+    
+    // 修复：描述输入框背景
+    HBRUSH hDescInputBrush = CreateSolidBrush(RGB(255, 255, 255));
+    FillRect(hdc, &descInputRect, hDescInputBrush);
+    DeleteObject(hDescInputBrush);
+    
+    // 修复：描述输入框边框
+    BOOL isDescFocused = (currentField == 1);
+    HPEN hDescPen = CreatePen(PS_SOLID, isDescFocused ? 2 : 1, 
+                            isDescFocused ? RGB(0, 120, 215) : RGB(150, 150, 150));
+    hOldPen = (HPEN)SelectObject(hdc, hDescPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, descInputRect.left, descInputRect.top, descInputRect.right, descInputRect.bottom);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hDescPen);
+    
+    // 修复：描述文字显示
+    SetBkMode(hdc, OPAQUE);
+    SetBkColor(hdc, RGB(255, 255, 255));
+    SetTextColor(hdc, RGB(0, 0, 0));
+    
+    SelectObject(hdc, hInputFont);
+    
+    // 多行文本显示
+    RECT textRect = {descInputRect.left + 5, descInputRect.top + 5, descInputRect.right - 5, descInputRect.bottom - 5};
+    DrawText(hdc, bugDescription, -1, &textRect, DT_LEFT | DT_TOP | DT_WORDBREAK);
+    
+    // 修复：描述框光标显示
+    if (isDescFocused) {
+        static DWORD lastDescBlink = GetTickCount();
+        static BOOL showDescCursor = TRUE;
+        
+        if (GetTickCount() - lastDescBlink > 500) {
+            showDescCursor = !showDescCursor;
+            lastDescBlink = GetTickCount();
+        }
+        
+        if (showDescCursor) {
+            // 计算描述文本的高度
+            RECT tempRect = textRect;
+            DrawText(hdc, bugDescription, -1, &tempRect, DT_LEFT | DT_TOP | DT_WORDBREAK | DT_CALCRECT);
+            int cursorY = tempRect.bottom;
+            if (cursorY < textRect.top + 5) cursorY = textRect.top + 5;
+            
+            HPEN hDescCursorPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+            hOldPen = (HPEN)SelectObject(hdc, hDescCursorPen);
+            MoveToEx(hdc, textRect.left, cursorY, NULL);
+            LineTo(hdc, textRect.left + 10, cursorY);
+            SelectObject(hdc, hOldPen);
+            DeleteObject(hDescCursorPen);
+        }
+    }
+    
+    // 绘制按钮
+    int buttonWidth = 100;
+    int buttonHeight = 35;
+    int buttonY = bugRect.bottom - 50;
+    
+//    // 提交按钮
+//    RECT submitButtonRect = {centerX - 120, buttonY, centerX - 120 + buttonWidth, buttonY + buttonHeight};
+//    HBRUSH hSubmitBrush = CreateSolidBrush(RGB(0, 150, 0));
+//    FillRect(hdc, &submitButtonRect, hSubmitBrush);
+//    DeleteObject(hSubmitBrush);
+//    
+//    HPEN hSubmitPen = CreatePen(PS_SOLID, 1, RGB(0, 100, 0));
+//    hOldPen = (HPEN)SelectObject(hdc, hSubmitPen);
+//    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+//    Rectangle(hdc, centerX - 120, buttonY, centerX - 120 + buttonWidth, buttonY + buttonHeight);
+//    SelectObject(hdc, hOldPen);
+//    DeleteObject(hSubmitPen);
+//    
+//    SetTextColor(hdc, RGB(255, 255, 255));
+//    TextOut(hdc, centerX - 105, buttonY + 10, "提交报告", 8);
+    
+//    // 取消按钮
+//    RECT cancelButtonRect = {centerX + 20, buttonY, centerX + 20 + buttonWidth, buttonY + buttonHeight};
+//    HBRUSH hCancelBrush = CreateSolidBrush(RGB(200, 0, 0));
+//    FillRect(hdc, &cancelButtonRect, hCancelBrush);
+//    DeleteObject(hCancelBrush);
+//    
+//    HPEN hCancelPen = CreatePen(PS_SOLID, 1, RGB(150, 0, 0));
+//    hOldPen = (HPEN)SelectObject(hdc, hCancelPen);
+//    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+//    Rectangle(hdc, centerX + 20, buttonY, centerX + 20 + buttonWidth, buttonY + buttonHeight);
+//    SelectObject(hdc, hOldPen);
+//    DeleteObject(hCancelPen);
+//    
+//    SetTextColor(hdc, RGB(255, 255, 255));
+//    TextOut(hdc, centerX + 40, buttonY + 10, "取消", 4);
+    
+    // 绘制提示信息
+    SelectObject(hdc, hInputFont);
+    SetTextColor(hdc, RGB(100, 100, 100));
+    SetBkMode(hdc, TRANSPARENT);
+    TextOut(hdc, bugRect.left + 20, bugRect.bottom - 90, "提示: Bug报告将保存到 bug.dat 文件中，用于帮助改进f系统，按enter键提交，按esc键取消", 83);
+    
+    // 修复：添加字段切换提示
+    TextOut(hdc, bugRect.left + 20, bugRect.bottom - 70, "使用Tab键切换输入字段", 22);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hLabelFont);
+    DeleteObject(hInputFont);
+}
+
+// 绘制Bug分类选择器
+void DrawBugCategorySelector(HDC hdc, int x, int y, int width, int height) {
+    const char* categories[] = {"界面问题", "功能异常", "性能问题", "系统崩溃", "其他问题"};
+    int categoryWidth = width / 5;
+    
+    for (int i = 0; i < 5; i++) {
+        RECT catRect = {x + i * categoryWidth, y, x + (i + 1) * categoryWidth, y + height};
+        
+        COLORREF bgColor = (bugCategory == i) ? RGB(100, 150, 255) : RGB(220, 220, 220);
+        HBRUSH hCatBrush = CreateSolidBrush(bgColor);
+        FillRect(hdc, &catRect, hCatBrush);
+        DeleteObject(hCatBrush);
+        
+        HPEN hCatPen = CreatePen(PS_SOLID, 1, RGB(150, 150, 150));
+        HPEN hOldPen = (HPEN)SelectObject(hdc, hCatPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, catRect.left, catRect.top, catRect.right, catRect.bottom);
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hCatPen);
+        
+        SetTextColor(hdc, (bugCategory == i) ? RGB(255, 255, 255) : RGB(0, 0, 0));
+        HFONT hCatFont = CreateFont(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hCatFont);
+        
+        int textWidth = GetTextWidth(hdc, categories[i]);
+        TextOut(hdc, catRect.left + (categoryWidth - textWidth) / 2, catRect.top + 8, categories[i], strlen(categories[i]));
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hCatFont);
+    }
+}
+
+// 绘制Bug严重程度选择器
+void DrawBugSeveritySelector(HDC hdc, int x, int y, int width, int height) {
+    const char* severities[] = {"低", "中", "高", "严重"};
+    const COLORREF severityColors[] = {
+        RGB(100, 200, 100),   // 低 - 绿色
+        RGB(255, 200, 100),   // 中 - 黄色
+        RGB(255, 150, 50),    // 高 - 橙色
+        RGB(255, 50, 50)      // 严重 - 红色
+    };
+    
+    int severityWidth = width / 4;
+    
+    for (int i = 0; i < 4; i++) {
+        RECT sevRect = {x + i * severityWidth, y, x + (i + 1) * severityWidth, y + height};
+        
+        COLORREF bgColor = (bugSeverity == i + 1) ? severityColors[i] : RGB(220, 220, 220);
+        HBRUSH hSevBrush = CreateSolidBrush(bgColor);
+        FillRect(hdc, &sevRect, hSevBrush);
+        DeleteObject(hSevBrush);
+        
+        HPEN hSevPen = CreatePen(PS_SOLID, 1, RGB(150, 150, 150));
+        HPEN hOldPen = (HPEN)SelectObject(hdc, hSevPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, sevRect.left, sevRect.top, sevRect.right, sevRect.bottom);
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hSevPen);
+        
+        SetTextColor(hdc, (bugSeverity == i + 1) ? RGB(255, 255, 255) : RGB(0, 0, 0));
+        HFONT hSevFont = CreateFont(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hSevFont);
+        
+        int textWidth = GetTextWidth(hdc, severities[i]);
+        TextOut(hdc, sevRect.left + (severityWidth - textWidth) / 2, sevRect.top + 8, severities[i], strlen(severities[i]));
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hSevFont);
+    }
+}
+
+// 修改后的HandleBugReporterInput函数
+void HandleBugReporterInput(char key) {
+    static int currentField = 0; // 0:标题, 1:描述
+    
+    if (bugSubmitted) {
+        if (key == 13 || key == 27) { // Enter或ESC
+            showBugReporter = FALSE;
+        }
+        return;
+    }
+    
+    switch (key) {
+        case 9: // Tab键切换字段
+            currentField = (currentField + 1) % 2;
+            InvalidateRect(NULL, NULL, TRUE); // 刷新显示
+            break;
+            
+        case 8: // Backspace
+            if (currentField == 0 && strlen(bugTitle) > 0) {
+                bugTitle[strlen(bugTitle) - 1] = '\0';
+            }
+            else if (currentField == 1 && strlen(bugDescription) > 0) {
+                bugDescription[strlen(bugDescription) - 1] = '\0';
+            }
+            InvalidateRect(NULL, NULL, TRUE); // 刷新显示
+            break;
+            
+        case 13: // Enter键提交
+            SubmitBugReport();
+            InvalidateRect(NULL, NULL, TRUE); // 刷新显示
+            break;
+            
+        case 27: // ESC键关闭（不提交）
+            showBugReporter = FALSE;
+            InvalidateRect(NULL, NULL, TRUE);
+            break;
+            
+        default:
+            if (key >= 32 && key <= 126) { // 可打印字符
+                if (currentField == 0 && strlen(bugTitle) < 99) {
+                    int len = strlen(bugTitle);
+                    bugTitle[len] = key;
+                    bugTitle[len + 1] = '\0';
+                }
+                else if (currentField == 1 && strlen(bugDescription) < 999) {
+                    int len = strlen(bugDescription);
+                    bugDescription[len] = key;
+                    bugDescription[len + 1] = '\0';
+                }
+                InvalidateRect(NULL, NULL, TRUE); // 刷新显示
+            }
+            break;
+    }
+}
+// 提交Bug报告
+void SubmitBugReport() {
+    if (strlen(bugTitle) == 0) {
+        MessageBox(NULL, "请输入Bug标题", "提示", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    
+    if (strlen(bugDescription) == 0) {
+        MessageBox(NULL, "请输入Bug详细描述", "提示", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    
+    SaveBugToFile();
+    bugSubmitted = TRUE;
+}
+
+// 保存Bug到文件
+void SaveBugToFile() {
+    FILE* file = fopen("bug.dat", "a");
+    if (file) {
+        // 获取当前时间
+        time_t now;
+        struct tm* timeinfo;
+        char timeStr[50];
+        
+        time(&now);
+        timeinfo = localtime(&now);
+        strftime(timeStr, 50, "%Y-%m-%d %H:%M:%S", timeinfo);
+        
+        // 分类名称
+        const char* categories[] = {"界面问题", "功能异常", "性能问题", "系统崩溃", "其他问题"};
+        const char* severities[] = {"低", "中", "高", "严重"};
+        
+        // 写入Bug信息
+        fprintf(file, "=== Bug 报告 ===\n");
+        fprintf(file, "时间: %s\n", timeStr);
+        fprintf(file, "用户: %s\n", username);
+        fprintf(file, "计算机: %s\n", computerName);
+        fprintf(file, "分类: %s\n", categories[bugCategory]);
+        fprintf(file, "严重程度: %s\n", severities[bugSeverity - 1]);
+        fprintf(file, "标题: %s\n", bugTitle);
+        fprintf(file, "描述:\n%s\n", bugDescription);
+        fprintf(file, "================\n\n");
+        
+        fclose(file);
+    }
+}
+// 绘制网络中心设备
+void DrawNetworkHub(HDC hdc, int x, int y) {
+    HPEN hOldPen = (HPEN)SelectObject(hdc, GetStockObject(NULL_PEN));
+    
+    // 中心设备外壳
+    int hubWidth = 80;
+    int hubHeight = 60;
+    
+    HBRUSH hHubBrush = CreateSolidBrush(RGB(64, 64, 64));
+    SelectObject(hdc, hHubBrush);
+    RoundRect(hdc, x - hubWidth/2, y - hubHeight/2, x + hubWidth/2, y + hubHeight/2, 10, 10);
+    
+    // 设备前面板
+    HBRUSH hPanelBrush = CreateSolidBrush(RGB(40, 40, 40));
+    SelectObject(hdc, hPanelBrush);
+    Rectangle(hdc, x - hubWidth/2 + 5, y - hubHeight/2 + 5, x + hubWidth/2 - 5, y + hubHeight/2 - 5);
+    
+    // 端口指示灯
+    for (int i = 0; i < 8; i++) {
+        int ledX = x - hubWidth/2 + 15 + i * 7;
+        int ledY = y - hubHeight/2 + 15;
+        
+        HBRUSH hPortLedBrush = CreateSolidBrush(i < 5 ? RGB(0, 255, 0) : RGB(100, 100, 100));
+        SelectObject(hdc, hPortLedBrush);
+        Ellipse(hdc, ledX, ledY, ledX + 4, ledY + 4);
+        DeleteObject(hPortLedBrush);
+    }
+    
+    // 设备标签
+    HFONT hHubFont = CreateFont(9, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hHubFont);
+    
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(255, 255, 255));
+    TextOut(hdc, x - 25, y + 5, "SWITCH", 6);
+    
+    SelectObject(hdc, hOldFont);
+    SelectObject(hdc, hOldPen);
+    
+    DeleteObject(hHubBrush);
+    DeleteObject(hPanelBrush);
+    DeleteObject(hHubFont);
+}
+
+// 绘制单条网线
+void DrawEthernetCable(HDC hdc, int startX, int startY, int endX, int endY, int cableId) {
+    // 网线颜色（不同线缆不同颜色）
+    COLORREF cableColors[] = {
+        RGB(255, 0, 0),     // 红色
+        RGB(0, 255, 0),     // 绿色
+        RGB(0, 0, 255),     // 蓝色
+        RGB(255, 255, 0),   // 黄色
+        RGB(255, 0, 255)    // 紫色
+    };
+    
+    COLORREF cableColor = cableColors[cableId];
+    
+    // 绘制网线主体
+    HPEN hCablePen = CreatePen(PS_SOLID, 3, cableColor);
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hCablePen);
+    
+    // 计算控制点用于曲线
+    int controlX1 = (startX + endX) / 2;
+    int controlY1 = startY - 50;
+    int controlX2 = (startX + endX) / 2;
+    int controlY2 = endY + 50;
+    
+    // 使用贝塞尔曲线绘制自然的网线
+    POINT bezierPoints[4] = {
+        {startX, startY},
+        {controlX1, controlY1},
+        {controlX2, controlY2},
+        {endX, endY}
+    };
+    
+    PolyBezier(hdc, bezierPoints, 4);
+    
+    // 恢复原始画笔
+    SelectObject(hdc, hOldPen);
+    
+    // 清理资源
+    DeleteObject(hCablePen);
 }
 
 // 简易设置软件实现
@@ -491,6 +2241,7 @@ void ShowSettings(HWND hwnd) {
     CloseAllApps(hwnd);
     showSettings = TRUE;
     settingsCurrentStep = 0;
+    settingsFocusField = 0; // 初始化焦点到第一个字段
     settingsError = FALSE;
     
     // 初始化设置值
@@ -616,24 +2367,27 @@ void DrawSettingsStep(HDC hdc, int centerX, int centerY) {
     // 绘制当前步骤内容
     switch (settingsCurrentStep) {
         case 0: { // 用户设置
-            SelectObject(hdc, hBoldFont);
-            TextOut(hdc, centerX - 80, centerY - 180, "用户账户设置", 10);
-            SelectObject(hdc, hNormalFont);
-            
-            DrawInputBox(hdc, centerX - 200, centerY - 120, 400, 35, "新用户名:", newUsername, TRUE, FALSE, "输入新用户名");
-            DrawInputBox(hdc, centerX - 200, centerY - 50, 400, 35, "新密码:", newPassword, FALSE, TRUE, "输入新密码（留空保持不变）");
-            DrawInputBox(hdc, centerX - 200, centerY + 20, 400, 35, "确认密码:", newConfirmPassword, FALSE, TRUE, "确认新密码");
-            
-            if (settingsError) {
-                SetTextColor(hdc, VISTA_RED);
-                TextOut(hdc, centerX - 180, centerY + 70, settingsErrorMsg, strlen(settingsErrorMsg));
-                SetTextColor(hdc, RGB(0, 0, 0));
-            }
-            
-            SelectObject(hdc, hSmallFont);
-            TextOut(hdc, centerX - 180, centerY + 100, "提示：密码至少需要4个字符，留空表示不修改密码", 44);
-            break;
-        }
+    		SelectObject(hdc, hBoldFont);
+  		   	TextOut(hdc, centerX - 80, centerY - 180, "用户账户设置", 10);
+    		SelectObject(hdc, hNormalFont);
+    
+    		// 根据焦点状态绘制输入框
+    		DrawInputBox(hdc, centerX - 200, centerY - 120, 400, 35, "新用户名:", 
+                newUsername, settingsFocusField == 0, FALSE, "输入新用户名");
+    		DrawInputBox(hdc, centerX - 200, centerY - 50, 400, 35, "新密码:", 
+                newPassword, settingsFocusField == 1, TRUE, "输入新密码（留空保持不变）");
+    		DrawInputBox(hdc, centerX - 200, centerY + 20, 400, 35, "确认密码:", 
+                newConfirmPassword, settingsFocusField == 2, TRUE, "确认新密码");
+    
+    		if (settingsError) {
+        		SetTextColor(hdc, VISTA_RED);
+        		TextOut(hdc, centerX - 180, centerY + 70, settingsErrorMsg, strlen(settingsErrorMsg));
+        		SetTextColor(hdc, RGB(0, 0, 0));
+    		}
+    
+    		SelectObject(hdc, hSmallFont);
+    		break;
+		}
             
         case 1: { // 系统设置
             SelectObject(hdc, hBoldFont);
@@ -650,7 +2404,7 @@ void DrawSettingsStep(HDC hdc, int centerX, int centerY) {
             TextOut(hdc, centerX - 120, centerY - 10, computerName, strlen(computerName));
             
             TextOut(hdc, centerX - 200, centerY + 30, "系统版本:", 8);
-            TextOut(hdc, centerX - 120, centerY + 30, "fOS 1.0 Professional", 20);
+            TextOut(hdc, centerX - 120, centerY + 30, "fOS 1.0 Professional codename nori", 34);
             
             if (settingsError) {
                 SetTextColor(hdc, VISTA_RED);
@@ -663,19 +2417,19 @@ void DrawSettingsStep(HDC hdc, int centerX, int centerY) {
             
         case 2: { // 主题设置
             SelectObject(hdc, hBoldFont);
-            TextOut(hdc, centerX - 80, centerY - 180, "系统主题设置", 10);
+            TextOut(hdc, centerX - 80, centerY - 180, "系统主题设置", 12);
             SelectObject(hdc, hNormalFont);
             
-            TextOut(hdc, centerX - 200, centerY - 120, "选择主题:", 8);
+            TextOut(hdc, centerX - 200, centerY - 120, "可选主题:", 9);
             
             // 绘制主题选择器
             DrawThemeSelector(hdc, centerX - 200, centerY - 80, 400, 120);
             
-            TextOut(hdc, centerX - 200, centerY + 60, "当前主题:", 8);
+            TextOut(hdc, centerX - 200, centerY + 60, "当前主题:", 9);
             TextOut(hdc, centerX - 120, centerY + 60, themes[currentThemeIndex].themeName, strlen(themes[currentThemeIndex].themeName));
             
             SelectObject(hdc, hSmallFont);
-            TextOut(hdc, centerX - 200, centerY + 90, "主题更改将在下次启动时生效", 24);
+            TextOut(hdc, centerX - 200, centerY + 90, "请按TAB键切换所选主题", 21);
             break;
         }
     }
@@ -804,36 +2558,285 @@ void DrawThemeSelector(HDC hdc, int x, int y, int width, int height) {
     }
 }
 
-// 处理设置软件输入
+// 处理设置软件输入 - 修复版本
 void HandleSettingsInput(char key) {
     switch (settingsCurrentStep) {
-        case 0: // 用户设置
-            if (key == 8) { // Backspace
-                if (strlen(newUsername) > 0) {
-                    newUsername[strlen(newUsername) - 1] = '\0';
+        case 0: { // 用户设置
+            if (key == 9) { // Tab键 - 在输入框之间切换焦点
+                settingsFocusField = (settingsFocusField + 1) % 3;
+            }
+            else if (key == 8) { // Backspace
+                switch (settingsFocusField) {
+                    case 0: // 用户名
+                        if (strlen(newUsername) > 0) {
+                            newUsername[strlen(newUsername) - 1] = '\0';
+                        }
+                        break;
+                    case 1: // 密码
+                        if (strlen(newPassword) > 0) {
+                            newPassword[strlen(newPassword) - 1] = '\0';
+                        }
+                        break;
+                    case 2: // 确认密码
+                        if (strlen(newConfirmPassword) > 0) {
+                            newConfirmPassword[strlen(newConfirmPassword) - 1] = '\0';
+                        }
+                        break;
                 }
-            } else if (key >= 32 && key <= 126 && strlen(newUsername) < 49) {
-                int len = strlen(newUsername);
-                newUsername[len] = key;
-                newUsername[len + 1] = '\0';
+            } 
+            else if (key == 13) { // Enter键 - 验证并进入下一步
+                if (ValidateSettingsInput()) {
+                    settingsCurrentStep = 1;
+                    settingsFocusField = 0; // 重置焦点到第一个字段
+                }
+            }
+            else if (key >= 32 && key <= 126) { // 可打印字符
+                switch (settingsFocusField) {
+                    case 0: // 用户名
+                        if (strlen(newUsername) < 49) {
+                            int len = strlen(newUsername);
+                            newUsername[len] = key;
+                            newUsername[len + 1] = '\0';
+                        }
+                        break;
+                    case 1: // 密码
+                        if (strlen(newPassword) < 49) {
+                            int len = strlen(newPassword);
+                            newPassword[len] = key;
+                            newPassword[len + 1] = '\0';
+                        }
+                        break;
+                    case 2: // 确认密码
+                        if (strlen(newConfirmPassword) < 49) {
+                            int len = strlen(newConfirmPassword);
+                            newConfirmPassword[len] = key;
+                            newConfirmPassword[len + 1] = '\0';
+                        }
+                        break;
+                }
             }
             break;
+        }
             
-        case 1: // 系统设置
-            if (key == 8) { // Backspace
+        case 1: { // 系统设置
+            if (key == 9) { // Tab键
+                // 可以在这里添加其他字段的切换逻辑
+            }
+            else if (key == 8) { // Backspace
                 if (strlen(newComputerName) > 0) {
                     newComputerName[strlen(newComputerName) - 1] = '\0';
                 }
-            } else if (key >= 32 && key <= 126 && strlen(newComputerName) < 49) {
+            } 
+            else if (key == 13) { // Enter键 - 验证并进入下一步
+                if (ValidateSettingsInput()) {
+                    settingsCurrentStep = 2;
+                }
+            }
+            else if (key >= 32 && key <= 126 && strlen(newComputerName) < 49) {
                 int len = strlen(newComputerName);
                 newComputerName[len] = key;
                 newComputerName[len + 1] = '\0';
             }
             break;
+        }
+            
+        case 2: { // 主题设置
+            if (key == 9) { // Tab键 - 在主题之间切换
+                currentThemeIndex = (currentThemeIndex + 1) % 4;
+            }
+            else if (key == 13) { // Enter键 - 完成设置
+                ApplySettings();
+                showSettings = FALSE;
+            }
+            break;
+        }
     }
     
     settingsError = FALSE;
+    
 }
+//------------废弃代码开始 -----------------
+//// 绘制USB设备错误界面 - 优化版本（无连接文字，居中，高对比度）
+//void DrawUSBErrorScreen(HDC hdc, int centerX, int centerY) {
+//    RECT errorRect = {centerX - 400, centerY - 250, centerX + 400, centerY + 250};
+//    
+//    // 高对比度渐变背景 - 深蓝到黑色
+//    for (int y = errorRect.top; y < errorRect.bottom; y++) {
+//        double ratio = (double)(y - errorRect.top) / (errorRect.bottom - errorRect.top);
+//        int r = (int)(30 * (1 - ratio));
+//        int g = (int)(60 * (1 - ratio));
+//        int b = (int)(120 * (1 - ratio));
+//        
+//        COLORREF color = RGB(r, g, b);
+//        HPEN hPen = CreatePen(PS_SOLID, 1, color);
+//        HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+//        MoveToEx(hdc, errorRect.left, y, NULL);
+//        LineTo(hdc, errorRect.right, y);
+//        SelectObject(hdc, hOldPen);
+//        DeleteObject(hPen);
+//    }
+//    
+//    // 边框 - 亮蓝色，高对比度
+//    HPEN hBorderPen = CreatePen(PS_SOLID, 3, RGB(0, 191, 255));
+//    HPEN hOldPen = (HPEN)SelectObject(hdc, hBorderPen);
+//    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+//    Rectangle(hdc, errorRect.left, errorRect.top, errorRect.right, errorRect.bottom);
+//    SelectObject(hdc, hOldPen);
+//    DeleteObject(hBorderPen);
+//    
+//    SetBkMode(hdc, TRANSPARENT);
+//    
+//    // 标题 - 亮白色，高对比度
+//    HFONT hTitleFont = CreateFont(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+//        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+//        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+//    HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+//    
+//    SetTextColor(hdc, RGB(255, 255, 255));
+//    
+//    char title[100];
+//    sprintf(title, "USB设备识别错误 - %c盘", usbDriveLetter);
+//    int titleWidth = GetTextWidth(hdc, title);
+//    TextOut(hdc, centerX - titleWidth/2, centerY - 220, title, strlen(title));
+//    
+//    // 错误信息 - 亮黄色，高对比度，居中显示
+//    HFONT hMessageFont = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+//        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+//        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+//    SelectObject(hdc, hMessageFont);
+//    
+//    SetTextColor(hdc, RGB(255, 255, 0)); // 亮黄色
+//    
+//    // 分行居中显示错误信息
+//    int messageY = centerY - 120;
+//    int messageWidth = GetTextWidth(hdc, errorMessage);
+//    TextOut(hdc, centerX - messageWidth/2, messageY, errorMessage, strlen(errorMessage));
+//    
+//    // 建议操作 - 亮绿色，高对比度，居中显示
+//    SetTextColor(hdc, RGB(0, 255, 0)); // 亮绿色
+//    
+//    const char* suggestions[] = {
+//        "检查USB设备是否正确连接",
+//        "尝试重新插拔USB设备", 
+//        "咨询设备厂商兼容性",
+//        "在fOS官网查看兼容设备列表"
+//    };
+//    
+//    int suggestionY = centerY - 60;
+//    HFONT hSuggestionFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+//        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+//        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+//    SelectObject(hdc, hSuggestionFont);
+//    
+//    for (int i = 0; i < 4; i++) {
+//        int textWidth = GetTextWidth(hdc, suggestions[i]);
+//        TextOut(hdc, centerX - textWidth/2, suggestionY, suggestions[i], strlen(suggestions[i]));
+//        suggestionY += 30;
+//    }
+//    
+//    // 操作按钮 - 居中显示
+//    int buttonWidth = 200;
+//    int buttonHeight = 45;
+//    int buttonY = centerY + 80;
+//    
+//    // 返回按钮 - 高对比度橙色
+//    RECT buttonRect = {centerX - buttonWidth/2, buttonY, centerX + buttonWidth/2, buttonY + buttonHeight};
+//    HBRUSH hButtonBrush = CreateSolidBrush(RGB(255, 140, 0)); // 亮橙色
+//    FillRect(hdc, &buttonRect, hButtonBrush);
+//    DeleteObject(hButtonBrush);
+//    
+//    HPEN hButtonPen = CreatePen(PS_SOLID, 2, RGB(255, 200, 0));
+//    hOldPen = (HPEN)SelectObject(hdc, hButtonPen);
+//    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+//    Rectangle(hdc, centerX - buttonWidth/2, buttonY, centerX + buttonWidth/2, buttonY + buttonHeight);
+//    SelectObject(hdc, hOldPen);
+//    DeleteObject(hButtonPen);
+//    
+//    SetTextColor(hdc, RGB(255, 255, 255));
+//    HFONT hButtonFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+//        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+//        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+//    HFONT hOldButtonFont = (HFONT)SelectObject(hdc, hButtonFont);
+//    
+//    const char* buttonText = "按ESC键返回文件管理器";
+//    int buttonTextWidth = GetTextWidth(hdc, buttonText);
+//    TextOut(hdc, centerX - buttonTextWidth/2, buttonY + 14, buttonText, strlen(buttonText));
+//    
+//    // 恢复原始字体
+//    SelectObject(hdc, hOldButtonFont);
+//    SelectObject(hdc, hOldFont);
+//    
+//    // 清理资源
+//    DeleteObject(hTitleFont);
+//    DeleteObject(hMessageFont);
+//    DeleteObject(hSuggestionFont);
+//    DeleteObject(hButtonFont);
+//}
+//
+//
+//// 绘制USB错误按钮 - 粉色版本
+//void DrawUSBErrorButton(HDC hdc, int x, int y, int width, int height, const char* text, BOOL isPrimary) {
+//    RECT buttonRect = {x, y, x + width, y + height};
+//    
+//    // 粉色按钮
+//    COLORREF buttonColor = isPrimary ? RGB(220, 120, 180) : RGB(200, 150, 190);
+//    HBRUSH hButtonBrush = CreateSolidBrush(buttonColor);
+//    FillRect(hdc, &buttonRect, hButtonBrush);
+//    DeleteObject(hButtonBrush);
+//    
+//    HPEN hBorderPen = CreatePen(PS_SOLID, 2, RGB(180, 100, 160));
+//    HPEN hOldPen = (HPEN)SelectObject(hdc, hBorderPen);
+//    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+//    Rectangle(hdc, x, y, x + width, y + height);
+//    SelectObject(hdc, hOldPen);
+//    DeleteObject(hBorderPen);
+//    
+//    SetTextColor(hdc, RGB(255, 255, 255));
+//    HFONT hButtonFont = CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+//        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+//        DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+//    HFONT hOldFont = (HFONT)SelectObject(hdc, hButtonFont);
+//    
+//    int textWidth = GetTextWidth(hdc, text);
+//    TextOut(hdc, x + (width - textWidth) / 2, y + 14, text, strlen(text));
+//    
+//    SelectObject(hdc, hOldFont);
+//    DeleteObject(hButtonFont);
+//}
+//
+//// 处理USB错误界面输入 - 直接关机版本
+//void HandleUSBErrorInput(char key) {
+//    switch (key) {
+//        case 13: // Enter键
+//        case 27: // ESC键
+//        case 'r': case 'R': // R键
+//        case 'b': case 'B': // B键
+//        case ' ': // 空格键
+//            // 直接运行关机函数
+//            ShutdownSystem(NULL);
+//            break;
+//    }
+//}
+//// 显示USB设备错误界面 - 修复版本
+//void ShowUSBErrorScreen(HWND hwnd, char driveLetter, const char* message) {
+//    showUSBError = TRUE;
+//    usbDriveLetter = driveLetter;
+//    strcpy(errorMessage, message);
+//    
+//    // 关闭其他界面，但记住是从文件管理器来的
+//    showFileManager = FALSE;  // 暂时隐藏文件管理器
+//    showDesktop = FALSE;
+//    showCalculator = FALSE;
+//    showSystemInfo = FALSE;
+//    showSettings = FALSE;
+//    // 注意：不要修改 showOOBE 的状态
+//    
+//    if (hwnd) {
+//        InvalidateRect(hwnd, NULL, TRUE);
+//        UpdateWindow(hwnd);
+//    }
+//}
+//---------------废弃代码结束 -----------------
 
 // 验证设置输入
 BOOL ValidateSettingsInput() {
@@ -934,7 +2937,7 @@ void RefreshFileList() {
     hFind = FindFirstFile(searchPath, &findFileData);
     
     if (hFind == INVALID_HANDLE_VALUE) {
-        sprintf(commandOutput, "Error: Cannot access directory %s", currentPath);
+        sprintf(commandOutput, "错误：无法访问目录 %s", currentPath);
         return;
     }
     
@@ -1007,10 +3010,10 @@ void CreateFileReal(const char* filename) {
     HANDLE hFile = CreateFile(fullPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
     
     if (hFile == INVALID_HANDLE_VALUE) {
-        sprintf(commandOutput, "Error: Cannot create file %s", filename);
+        sprintf(commandOutput, "错误：无法创建文件 %s", filename);
     } else {
         CloseHandle(hFile);
-        sprintf(commandOutput, "File created: %s", filename);
+        sprintf(commandOutput, "文件已创建： %s", filename);
         RefreshFileList();
     }
 }
@@ -1021,10 +3024,10 @@ void DeleteFileReal(const char* filename) {
     sprintf(fullPath, "%s\\%s", currentPath, filename);
     
     if (DeleteFile(fullPath)) {
-        sprintf(commandOutput, "File deleted: %s", filename);
+        sprintf(commandOutput, "文件已删除： %s", filename);
         RefreshFileList();
     } else {
-        sprintf(commandOutput, "Error: Cannot delete file %s", filename);
+        sprintf(commandOutput, "错误：无法删除文件 %s", filename);
     }
 }
 
@@ -1034,10 +3037,10 @@ void CreateDirectoryReal(const char* dirname) {
     sprintf(fullPath, "%s\\%s", currentPath, dirname);
     
     if (CreateDirectory(fullPath, NULL)) {
-        sprintf(commandOutput, "Directory created: %s", dirname);
+        sprintf(commandOutput, "目录已创建： %s", dirname);
         RefreshFileList();
     } else {
-        sprintf(commandOutput, "Error: Cannot create directory %s", dirname);
+        sprintf(commandOutput, "错误：无法创建目录 %s", dirname);
     }
 }
 
@@ -1049,10 +3052,10 @@ void CopyFileReal(const char* source, const char* target) {
     sprintf(targetPath, "%s\\%s", currentPath, target);
     
     if (CopyFile(sourcePath, targetPath, FALSE)) {
-        sprintf(commandOutput, "File copied: %s -> %s", source, target);
+        sprintf(commandOutput, "文件已复制： %s -> %s", source, target);
         RefreshFileList();
     } else {
-        sprintf(commandOutput, "Error: Cannot copy file %s to %s", source, target);
+        sprintf(commandOutput, "错误：无法将文件 %s  复制到 %s", source, target);
     }
 }
 
@@ -1064,14 +3067,14 @@ void RenameFileReal(const char* oldname, const char* newname) {
     sprintf(newPath, "%s\\%s", currentPath, newname);
     
     if (MoveFile(oldPath, newPath)) {
-        sprintf(commandOutput, "File renamed: %s -> %s", oldname, newname);
+        sprintf(commandOutput, "文件已重命名： %s -> %s", oldname, newname);
         RefreshFileList();
     } else {
-        sprintf(commandOutput, "Error: Cannot rename file %s to %s", oldname, newname);
+        sprintf(commandOutput, "错误：无法将文件 %s 重命名为 %s", oldname, newname);
     }
 }
 
-// 改进的文件管理器命令处理
+// 修改文件管理器命令处理函数，添加水母求饶命令
 void HandleFileManagerCommand(const char* command) {
     char cmd[100];
     char param[100];
@@ -1091,101 +3094,124 @@ void HandleFileManagerCommand(const char* command) {
         cmd[i] = tolower(cmd[i]);
     }
     
-    if (strcmp(cmd, "lc") == 0 || strcmp(cmd, "list") == 0 || strcmp(cmd, "dir") == 0 || strcmp(cmd, "ls") == 0) {
+    // 检查是否是"castrate jellyfish"命令（新增）
+    if (strcmp(cmd, "kill") == 0 && strcmp(param, "jellyfish") == 0 || strcmp(cmd, "jellyfish") == 0 && strcmp(param, "die") == 0) {
+        showFOSEgg = TRUE;  // 复用现有的fos彩蛋显示机制
+        showFileManager = FALSE;
+        fosEggState = 5;    // 使用新的状态5表示水母求饶界面
+        fosEggProgress = 0;
+        currentDevStage = 0;
+        dialogueIndexx = 0;
+        lastFOSEggTime = GetTickCount();
+        return;
+    }
+    
+    if (strcmp(cmd, "list") == 0) {
         ListFiles();
     }
-    else if (strcmp(cmd, "go") == 0 || strcmp(cmd, "cd") == 0) {
+    else if (strcmp(cmd, "to") == 0 ) {
         if (strlen(param) > 0) {
             ChangeDirectory(param);
         } else {
-            strcpy(commandOutput, "Usage: go <path> or cd <path>\nExample: go C:\\Windows");
+            strcpy(commandOutput, "用法：to <路径> \n示例：to C:\\Windows");
         }
     }
-    else if (strcmp(cmd, "mkdir") == 0 || strcmp(cmd, "md") == 0) {
+    else if (strcmp(cmd, "new") == 0 ) {
         if (strlen(param) > 0) {
             CreateDirectoryReal(param);
         } else {
-            strcpy(commandOutput, "Usage: mkdir <directory_name>");
+            strcpy(commandOutput, "用法：new <目录名称>");
         }
     }
-    else if (strcmp(cmd, "type") == 0 || strcmp(cmd, "cat") == 0) {
+    else if (strcmp(cmd, "read") == 0) {
         if (strlen(param) > 0) {
             OpenFile(param);
         } else {
-            strcpy(commandOutput, "Usage: type <filename>");
+            strcpy(commandOutput, "用法：read <文件名>");
         }
     }
-    else if (strcmp(cmd, "del") == 0 || strcmp(cmd, "rm") == 0) {
+    else if (strcmp(cmd, "rem") == 0 ) {
         if (strlen(param) > 0) {
             DeleteFileReal(param);
         } else {
-            strcpy(commandOutput, "Usage: del <filename>");
+            strcpy(commandOutput, "用法：rem <文件名>");
         }
     }
-    else if (strcmp(cmd, "copy") == 0 || strcmp(cmd, "cp") == 0) {
+    else if (strcmp(cmd, "cop") == 0) {
         char source[100], target[100];
         if (sscanf(param, "%s %s", source, target) == 2) {
             CopyFileReal(source, target);
         } else {
-            strcpy(commandOutput, "Usage: copy <source> <destination>");
+            strcpy(commandOutput, "用法：cop <源文件> <目标路径>");
         }
     }
-    else if (strcmp(cmd, "rename") == 0 || strcmp(cmd, "ren") == 0) {
+    else if (strcmp(cmd, "name") == 0 ) {
         char oldname[100], newname[100];
         if (sscanf(param, "%s %s", oldname, newname) == 2) {
             RenameFileReal(oldname, newname);
         } else {
-            strcpy(commandOutput, "Usage: rename <oldname> <newname>");
+            strcpy(commandOutput, "用法：name <原文件名> <新文件名>");
         }
     }
-    else if (strcmp(cmd, "create") == 0 || strcmp(cmd, "touch") == 0) {
+    else if (strcmp(cmd, "newf") == 0) {
         if (strlen(param) > 0) {
             CreateFileReal(param);
         } else {
-            strcpy(commandOutput, "Usage: create <filename>");
+            strcpy(commandOutput, "用法：newf <文件名>");
         }
     }
-    else if (strcmp(cmd, "edit") == 0) {
+    else if (strcmp(cmd, "open") == 0) {
         if (strlen(param) > 0) {
             // 打开文件编辑器
             ShowFileEditor(NULL, param);
         } else {
-            strcpy(commandOutput, "Usage: edit <filename>");
+            strcpy(commandOutput, "用法：open <文件名>");
         }
     }
     else if (strcmp(cmd, "hidden") == 0) {
         showHiddenFiles = !showHiddenFiles;
         RefreshFileList();
-        sprintf(commandOutput, "Hidden files are now %s", showHiddenFiles ? "visible" : "hidden");
+        sprintf(commandOutput, "隐藏文件现已 %s", showHiddenFiles ? "可见" : "隐藏");
     }
-    else if (strcmp(cmd, "pwd") == 0) {
-        sprintf(commandOutput, "Current directory: %s", currentPath);
+    else if (strcmp(cmd, "where") == 0) {
+        sprintf(commandOutput, "当前目录： %s", currentPath);
     }
-    else if (strcmp(cmd, "help") == 0 || strcmp(cmd, "?") == 0) {
+    else if (strcmp(cmd, "help") == 0) {
         ShowHelp();
     }
-    else if (strcmp(cmd, "cls") == 0 || strcmp(cmd, "clear") == 0) {
-        strcpy(commandOutput, "Screen cleared");
+    else if (strcmp(cmd, "clear") == 0) {
+        strcpy(commandOutput, "屏幕已清空");
     }
-    else if (strcmp(cmd, "exit") == 0 || strcmp(cmd, "quit") == 0) {
+    else if (strcmp(cmd, "bye") == 0 ) {
         showFileManager = FALSE;
-        strcpy(commandOutput, "File manager closed");
+        strcpy(commandOutput, "文件管理器已关闭");
     }
-    else if (strcmp(cmd, "ver") == 0 || strcmp(cmd, "version") == 0) {
-        strcpy(commandOutput, "fOS File Manager v1.0 Professional\nBuild 200 (Professional Edition)");
+    else if (strcmp(cmd, "about") == 0) {
+        strcpy(commandOutput, "fOS 文件管理器 v1.0 专业版\n版本 200 (专业版)");
     }
-    else if (strcmp(cmd, "date") == 0) {
+    else if (strcmp(cmd, "now") == 0) {
         char dateStr[50], timeStr[50];
         GetCurrentDateTime(dateStr, timeStr);
-        sprintf(commandOutput, "Current date: %s\nCurrent time: %s", dateStr, timeStr);
+        sprintf(commandOutput, "当前日期：%s\n当前时间：%s", dateStr, timeStr);
+    }
+    else if (strcmp(cmd, "bug") == 0) {
+        ShowBugReporter(NULL);
+    }
+    else if (strcmp(cmd, "buglist") == 0) {
+        ShowBugList(NULL);
+    }
+    else if (strcmp(cmd, "error") == 0) {
+        TriggerCriticalPurpleScreen(NULL);
+        strcpy(commandOutput, "触发系统致命错误...");
     }
     else if (strlen(cmd) > 0) {
         // 检查是否是打开文件命令
         if (strstr(cmd, ".txt") || strstr(cmd, ".c") || strstr(cmd, ".cpp") || 
-            strstr(cmd, ".h") || strstr(cmd, ".exe") || strstr(cmd, ".bat")) {
+            strstr(cmd, ".h") || strstr(cmd, ".exe") || strstr(cmd, ".bat") ||
+			strstr(cmd, ".log") || strstr(cmd, ".docx") || strstr(cmd, ".doc")) {
             OpenFile(cmd);
         } else {
-            sprintf(commandOutput, "Unknown command: %s\nType 'help' for available commands", cmd);
+            sprintf(commandOutput, "未知命令：%s\n输入 'help' 查看可用命令", cmd);
         }
     }
 }
@@ -1201,14 +3227,14 @@ void ExecuteFileManagerCommand() {
 // 改进的列出文件函数
 void ListFiles() {
     RefreshFileList();
-    sprintf(commandOutput, "Directory of %s\n\n", currentPath);
+    sprintf(commandOutput, "%s 的目录\n\n", currentPath);
     
     char temp[500];
     int dirCount = 0, fileCountTotal = 0;
     long long totalSize = 0;
     
     // 添加列标题
-    strcat(commandOutput, "Type     Size       Date Modified    Name\n");
+    strcat(commandOutput, "类型     大小       修改日期        名称\n");
     strcat(commandOutput, "-------- ---------- --------------- --------------------\n");
     
     for (int i = 0; i < fileCount; i++) {
@@ -1241,32 +3267,46 @@ void ListFiles() {
 // 改进的改变目录函数
 void ChangeDirectory(const char* path) {
     if (strlen(path) == 0) {
-        strcpy(commandOutput, "Usage: go <path> or cd <path>\nExample: go C:\\Windows");
+        strcpy(commandOutput, "用法：to <路径> \n示例：to C:\\Windows");
         return;
     }
     
     char newPath[MAX_PATH];
+    strcpy(newPath, currentPath); // 备份当前路径
     
     // 处理特殊路径
-    if (strcmp(path, "..") == 0 || strcmp(path, "../") == 0) {
+    if (strcmp(path, ".") == 0 || strcmp(path, "./") == 0) {
+        // 当前目录，不做任何改变
+        sprintf(commandOutput, "已切换到当前目录：%s", currentPath);
+        return;
+    }
+    else if (strcmp(path, "..") == 0 || strcmp(path, "../") == 0) {
         // 返回到上级目录
         int len = strlen(currentPath);
         if (len > 3) { // 不是根目录
-            for (int i = len - 2; i >= 0; i--) {
-                if (currentPath[i] == '\\') {
-                    currentPath[i + 1] = '\0';
-                    break;
+            // 移除末尾的反斜杠（如果有）
+            if (currentPath[len-1] == '\\') {
+                currentPath[len-1] = '\0';
+                len--;
+            }
+            
+            // 找到上一个反斜杠
+            char* lastSlash = strrchr(currentPath, '\\');
+            if (lastSlash) {
+                // 如果是根目录（如 C:\），保留反斜杠
+                if (lastSlash == currentPath + 2) { // 如 C:\Windows 中的位置
+                    lastSlash[1] = '\0';
+                } else {
+                    *lastSlash = '\0';
                 }
             }
         }
     }
     else if (strcmp(path, "/") == 0 || strcmp(path, "\\") == 0) {
         // 回到根目录
-        GetCurrentDirectory(MAX_PATH, currentPath);
-        char drive[10];
-        strncpy(drive, currentPath, 3);
-        drive[3] = '\0';
-        strcpy(currentPath, drive);
+        if (strlen(currentPath) >= 3) {
+            currentPath[3] = '\0'; // 保留盘符和冒号、反斜杠（如 C:\）
+        }
     }
     else if (path[1] == ':') {
         // 绝对路径
@@ -1274,26 +3314,28 @@ void ChangeDirectory(const char* path) {
     }
     else {
         // 相对路径
+        // 确保当前路径以反斜杠结尾
         if (currentPath[strlen(currentPath)-1] != '\\') {
             strcat(currentPath, "\\");
         }
         strcat(currentPath, path);
     }
     
-    // 确保路径以反斜杠结尾
-    if (currentPath[strlen(currentPath)-1] != '\\') {
+    // 确保路径以反斜杠结尾（根目录除外）
+    int len = strlen(currentPath);
+    if (len > 3 && currentPath[len-1] != '\\') {
         strcat(currentPath, "\\");
     }
     
     // 验证路径是否存在
     DWORD attr = GetFileAttributes(currentPath);
     if (attr == INVALID_FILE_ATTRIBUTES || !(attr & FILE_ATTRIBUTE_DIRECTORY)) {
-        sprintf(commandOutput, "Error: Directory not found: %s", currentPath);
+        sprintf(commandOutput, "错误：找不到目录：%s", currentPath);
         // 恢复原路径
-        GetCurrentDirectory(MAX_PATH, currentPath);
+        strcpy(currentPath, newPath);
     } else {
         RefreshFileList();
-        sprintf(commandOutput, "Changed to directory: %s", currentPath);
+        sprintf(commandOutput, "已切换到目录：%s", currentPath);
     }
 }
 
@@ -1304,12 +3346,12 @@ void OpenFile(const char* filename) {
     
     DWORD attr = GetFileAttributes(fullPath);
     if (attr == INVALID_FILE_ATTRIBUTES) {
-        sprintf(commandOutput, "Error: File not found: %s", filename);
+        sprintf(commandOutput, "错误：找不到文件：%s", filename);
         return;
     }
     
     if (attr & FILE_ATTRIBUTE_DIRECTORY) {
-        sprintf(commandOutput, "Error: %s is a directory, use 'go %s'", filename, filename);
+        sprintf(commandOutput, "错误：%s 是目录，请使用 'to %s'", filename, filename);
         return;
     }
     
@@ -1323,7 +3365,7 @@ void OpenFile(const char* filename) {
         return;
     }
     
-    sprintf(commandOutput, "Opening file: %s\n\n", filename);
+    sprintf(commandOutput, "打开文件： %s\n\n", filename);
     
     if (ext) {
         if (stricmp(ext, ".txt") == 0 || stricmp(ext, ".c") == 0 || 
@@ -1339,26 +3381,26 @@ void OpenFile(const char* filename) {
                         buffer[bytesRead] = '\0';
                         strcat(commandOutput, buffer);
                     } else {
-                        strcat(commandOutput, "Error reading file content");
+                        strcat(commandOutput, "错误：读取文件内容失败");
                     }
                     free(buffer);
                 } else {
-                    strcat(commandOutput, "File is too large to display or empty");
+                    strcat(commandOutput, "文件过大或为空，无法显示");
                 }
                 CloseHandle(hFile);
             } else {
-                strcat(commandOutput, "Error opening file for reading");
+                strcat(commandOutput, "错误：无法打开文件进行读取");
             }
         }
         else if (stricmp(ext, ".exe") == 0) {
-            strcat(commandOutput, "Executable file. Use ShellExecute to run it.\n");
-            strcat(commandOutput, "In real implementation, this would launch the program.");
+            strcat(commandOutput, "可执行文件，请使用Windows环境运行\n");
+            strcat(commandOutput, "由于技术原因，在fOS1.0中无法运行，在fOS2.0中将会更新");
         }
         else {
-            strcat(commandOutput, "Binary file. Content cannot be displayed in text mode.");
+            strcat(commandOutput, "二进制文件。无法在文本模式下显示内容");
         }
     } else {
-        strcat(commandOutput, "File has no extension. Attempting to read as text...\n\n");
+        strcat(commandOutput, "文件无扩展名。正在尝试以文本格式读取...\n\n");
         
         HANDLE hFile = CreateFile(fullPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
@@ -1379,52 +3421,52 @@ void OpenFile(const char* filename) {
                     if (isText) {
                         strcat(commandOutput, buffer);
                     } else {
-                        strcat(commandOutput, "File appears to be binary. Content not displayed.");
+                        strcat(commandOutput, "文件可能为二进制格式，内容未显示。");
                     }
                 } else {
-                    strcat(commandOutput, "Error reading file content");
+                    strcat(commandOutput, "错误：读取文件内容失败");
                 }
                 free(buffer);
             } else {
-                strcat(commandOutput, "File is too large to display or empty");
+                strcat(commandOutput, "文件过大或为空，无法显示");
             }
             CloseHandle(hFile);
         } else {
-            strcat(commandOutput, "Error opening file for reading");
+            strcat(commandOutput, "错误：无法打开文件进行读取");
         }
     }
 }
 
 // 改进的帮助函数
 void ShowHelp() {
-    strcpy(commandOutput, "fOS File Manager - Command Help\n\n");
-    strcat(commandOutput, "File Operations:\n");
-    strcat(commandOutput, "  ls, dir, list    - List directory contents\n");
-    strcat(commandOutput, "  cd, go <path>    - Change directory\n");
-    strcat(commandOutput, "  type <file>      - Display file content\n");
-    strcat(commandOutput, "  edit <file>      - Edit text file\n");
-    strcat(commandOutput, "  del, rm <file>   - Delete file\n");
-    strcat(commandOutput, "  copy <src> <dst> - Copy file\n");
-    strcat(commandOutput, "  rename <old> <new> - Rename file\n");
-    strcat(commandOutput, "  mkdir <name>     - Create directory\n");
-    strcat(commandOutput, "  create <file>    - Create empty file\n\n");
+	strcpy(commandOutput, "fOS 文件管理器 - 命令帮助\n\n");
+	strcat(commandOutput, "文件操作：\n");
+	strcat(commandOutput, " list - 列出目录内容\n");
+	strcat(commandOutput, " to <路径> - 切换目录\n");
+	strcat(commandOutput, " read <文件> - 显示文件内容\n");
+	strcat(commandOutput, " open <文件> - 编辑文本文件\n");
+	strcat(commandOutput, " rem <文件> - 删除文件\n");
+	strcat(commandOutput, " cop <源> <目标> - 复制文件\n");
+	strcat(commandOutput, " name <原> <新> - 重命名文件\n");
+	strcat(commandOutput, " new <名称> - 创建目录\n");
+	strcat(commandOutput, " newf <文件> - 创建空文件\n\n");
     
-    strcat(commandOutput, "System Commands:\n");
-    strcat(commandOutput, "  pwd             - Show current directory\n");
-    strcat(commandOutput, "  hidden          - Toggle hidden files\n");
-    strcat(commandOutput, "  cls, clear      - Clear screen\n");
-    strcat(commandOutput, "  ver, version    - Show version\n");
-    strcat(commandOutput, "  date            - Show date and time\n");
-    strcat(commandOutput, "  help, ?         - Show this help\n");
-    strcat(commandOutput, "  exit, quit      - Exit file manager\n\n");
+    strcat(commandOutput, "系统命令：\n");
+	strcat(commandOutput, " where - 显示当前目录\n");
+	strcat(commandOutput, " hidden - 切换隐藏文件显示\n");
+	strcat(commandOutput, " clear - 清空屏幕\n");
+	strcat(commandOutput, " about - 显示版本\n");
+	strcat(commandOutput, " now - 显示日期和时间\n");
+	strcat(commandOutput, " help - 显示此帮助\n");
+	strcat(commandOutput, " bye - 退出文件管理器\n\n");
     
-    strcat(commandOutput, "Examples:\n");
-    strcat(commandOutput, "  ls                    List files\n");
-    strcat(commandOutput, "  go C:\\Windows         Change to Windows directory\n");
-    strcat(commandOutput, "  type readme.txt       View readme file\n");
-    strcat(commandOutput, "  edit notes.txt        Edit text file\n");
-    strcat(commandOutput, "  mkdir NewFolder       Create new directory\n");
-    strcat(commandOutput, "  create test.txt       Create empty file\n");
+    strcat(commandOutput, "使用示例：\n");
+	strcat(commandOutput, " list - 列出文件\n");
+	strcat(commandOutput, " to C:\\Windows - 切换到 Windows 目录\n");
+	strcat(commandOutput, " read readme.txt - 查看说明文件\n");
+	strcat(commandOutput, " open notes.txt - 编辑文本文件\n");
+	strcat(commandOutput, " new NewFolder - 创建新目录\n");
+	strcat(commandOutput, " newf test.txt - 创建空文件\n");
 }
 
 // 处理文件管理器输入
@@ -1439,9 +3481,360 @@ void HandleFileManagerInput(char key) {
         int len = strlen(commandInput);
         commandInput[len] = key;
         commandInput[len + 1] = '\0';
+        
+        // 检测fos彩蛋输入
+        if (len >= 2) {
+            char lastThree[4];
+            strncpy(lastThree, &commandInput[len-2], 3);
+            lastThree[3] = '\0';
+            
+            if (strcmp(lastThree, "fos") == 0) {
+                fosInputCount++;
+                
+                // 显示输入计数提示
+                char countMsg[50];
+                
+                // 达到5次触发彩蛋
+                if (fosInputCount >= 5) {
+                    showFOSEgg = TRUE;
+                    showFileManager = FALSE;
+                    fosInputCount = 0;
+                    fosEggState = 1;
+                    fosEggProgress = 0;
+                    currentDevStage = 0;
+                    dialogueIndexx = 0;
+                    lastFOSEggTime = GetTickCount();
+                }
+            }
+        }
     }
 }
 
+// 绘制fos开发历程彩蛋（修改版，添加水母求饶界面）
+void DrawFOSEgg(HDC hdc, HWND hwnd) {
+    RECT rect;
+    GetClientRect(hwnd, &rect);
+    
+    // 渐变背景 - 从深蓝到黑色
+    for (int y = rect.top; y < rect.bottom; y++) {
+        double ratio = (double)(y - rect.top) / (rect.bottom - rect.top);
+        int r = (int)(10 * (1 - ratio));
+        int g = (int)(30 * (1 - ratio));
+        int b = (int)(80 * (1 - ratio));
+        COLORREF color = RGB(r, g, b);
+        HPEN hPen = CreatePen(PS_SOLID, 1, color);
+        HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+        MoveToEx(hdc, rect.left, y, NULL);
+        LineTo(hdc, rect.right, y);
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hPen);
+    }
+    
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, TRANSPARENT);
+    
+    int centerX = rect.right / 2;
+    int centerY = rect.bottom / 2;
+    
+    switch (fosEggState) {
+        case 1: { // 旁白对话
+            DrawDialogueScene(hdc, centerX, centerY);
+            break;
+        }
+        case 2: { // 开发历程回顾
+            DrawDevTimeline(hdc, centerX, centerY);
+            break;
+        }
+        case 3: { // 功能展示
+            DrawFeatureShowcase(hdc, centerX, centerY);
+            break;
+        }
+        case 4: { // 致谢名单
+            DrawCredits(hdc, centerX, centerY);
+            break;
+        }
+        case 5: { // 水母求饶界面（新增）- 明确是公水母代表开发团队
+            DrawJellyfishPleaScene(hdc, centerX, centerY);
+            break;
+        }
+    }
+    
+    // 绘制翻页提示（除了致谢名单和水母求饶界面）
+    if (fosEggState != 4 && fosEggState != 5) {
+        HFONT hHintFont = CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, DEFAULT_PITCH, "宋体");
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hHintFont);
+        TextOut(hdc, centerX - 80, rect.bottom - 40, "按Enter键继续", 12);
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hHintFont);
+    }
+    
+    // 绘制跳过提示（所有彩蛋界面都有）
+    HFONT hHintFont = CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "宋体");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hHintFont);
+    TextOut(hdc, centerX - 60, rect.bottom - 20, "按ESC键跳过", 10);
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hHintFont);
+}
+
+// 绘制旁白对话场景
+void DrawDialogueScene(HDC hdc, int centerX, int centerY) {
+    // 绘制对话背景
+    RECT dialogueBg = {centerX - 350, centerY - 100, centerX + 350, centerY + 100};
+    HBRUSH hDialogueBrush = CreateSolidBrush(RGB(30, 30, 60));
+    FillRect(hdc, &dialogueBg, hDialogueBrush);
+    DeleteObject(hDialogueBrush);
+    
+    HPEN hBorderPen = CreatePen(PS_SOLID, 3, RGB(100, 100, 200));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hBorderPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, centerX - 350, centerY - 100, centerX + 350, centerY + 100);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hBorderPen);
+    
+    // 在左上角绘制两个守慧吉祥物作为对话角色
+    DrawShouhuiMascot(hdc, centerX - 320, centerY - 80, 50);
+    DrawShouhuiMascot(hdc, centerX - 250, centerY - 80, 50);
+    
+    HFONT hDialogueFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hDialogueFont);
+    
+    // 对话内容
+    const char* dialogues[] = {
+        "A: 哇！这个人居然发现了这个彩蛋！",
+        "B: 是谁呀？这么厉害！",
+        "A: 让我看看...是用户 [USER] 呢！",
+        "B: 一看就是一位资深的彩蛋猎人！让 [USER] 看看我们准备的惊喜吧！"
+    };
+    
+    // 替换用户名占位符
+    char finalDialogue[200];
+    strcpy(finalDialogue, dialogues[dialogueIndexx]);
+    
+    // 替换 [USER] 为实际用户名
+    char* userPlaceholder = strstr(finalDialogue, "[USER]");
+    if (userPlaceholder) {
+        char temp[200];
+        strncpy(temp, finalDialogue, userPlaceholder - finalDialogue);
+        temp[userPlaceholder - finalDialogue] = '\0';
+        strcat(temp, username);
+        strcat(temp, userPlaceholder + 6); // 跳过 "[USER]"
+        strcpy(finalDialogue, temp);
+    }
+    
+    // 绘制对话文本
+    TextOut(hdc, centerX - 320, centerY - 30, finalDialogue, strlen(finalDialogue));
+    
+    // 绘制说话者标识
+    HFONT hSpeakerFont = CreateFont(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    SelectObject(hdc, hSpeakerFont);
+    
+    if (dialogueIndexx == 0 || dialogueIndexx == 2) {
+        SetTextColor(hdc, RGB(255, 200, 100)); // A角色颜色
+        TextOut(hdc, centerX - 320, centerY - 60, "水母A", 6);
+    } else {
+        SetTextColor(hdc, RGB(100, 200, 255)); // B角色颜色
+        TextOut(hdc, centerX - 250, centerY - 60, "水母B", 6);
+    }
+    
+    SetTextColor(hdc, RGB(255, 255, 255)); // 恢复白色
+    
+    // 绘制对话进度
+    char progressText[50];
+    sprintf(progressText, "对话 %d/4", dialogueIndexx + 1);
+    TextOut(hdc, centerX - 30, centerY + 70, progressText, strlen(progressText));
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hDialogueFont);
+    DeleteObject(hSpeakerFont);
+}
+
+// 绘制开发时间线
+void DrawDevTimeline(HDC hdc, int centerX, int centerY) {
+    // 标题
+    HFONT hTitleFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+    TextOut(hdc, centerX - 150, 50, "f系统1.0 开发历程", 14);
+    
+    // 开发阶段内容
+    HFONT hStageFont = CreateFont(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    HFONT hContentFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "宋体");
+    
+    const char* stages[] = {
+        "Pre-Build 阶段 - 概念验证期",
+        "Pre-Alpha 阶段 - 核心框架建设", 
+        "Alpha 阶段 - 功能扩展期",
+        "停止开发整理代码期 (2周)",
+        "Pre-Beta 阶段 - 系统优化期",
+        "Beta 阶段 - 专业功能集成",
+        "停止开发调整开学作息 (2周)",
+        "Release Candidate 阶段 - 发布准备"
+    };
+    
+    const char* stageDetails[] = {
+        " 2025年2月\n 项目启动和概念设计\n 界面原型设计\n 技术可行性分析\n 项目构思阶段，确定技术路线",
+        " 2025年3-5月\n 系统初始化框架\n OOBE基础界面\n 配置数据存储结构\n 建立系统基础配置框架",
+        " 2025年5-6月\n 桌面环境实现\n 首个应用程序\n 多用户支持实验\n 应用生态开始建设",
+        " 2025年6月\n 代码重构和优化\n 架构重新设计\n 性能问题修复\n 为后续开发奠定基础",
+        " 2025年7月\n 用户体验升级\n 系统配置完善\n 架构优化重构\n 从功能堆砌转向体验优化",
+        " 2025年7-8月\n 文件管理时代开始\n 真实文件操作\n 功能整合优化\n 专业功能深度集成",
+        " 2025年8月\n 开发节奏调整\n 功能规划重新评估\n 用户体验深度思考\n 为最终发布做准备",
+        " 2025年9-2026年1月\n 发布准备阶段\n CD-KEY验证系统\n 最终质量验证\n 项目圆满完成"
+    };
+    
+    SelectObject(hdc, hStageFont);
+    TextOut(hdc, centerX - 200, 120, stages[currentDevStage], strlen(stages[currentDevStage]));
+    
+    SelectObject(hdc, hContentFont);
+    
+    // 分行显示详细内容
+    char* detailCopy = _strdup(stageDetails[currentDevStage]);
+    char* line = strtok(detailCopy, "\n");
+    int lineY = 170;
+    
+    while (line != NULL) {
+        TextOut(hdc, centerX - 300, lineY, line, strlen(line));
+        line = strtok(NULL, "\n");
+        lineY += 30;
+    }
+    
+    free(detailCopy);
+    
+    // 绘制进度指示器
+    char progressText[50];
+    sprintf(progressText, "开发历程 %d/8", currentDevStage + 1);
+    TextOut(hdc, centerX - 40, centerY + 150, progressText, strlen(progressText));
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hTitleFont);
+    DeleteObject(hStageFont);
+    DeleteObject(hContentFont);
+}
+// 绘制功能展示
+void DrawFeatureShowcase(HDC hdc, int centerX, int centerY) {
+    HFONT hTitleFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+    TextOut(hdc, centerX - 120, 50, "核心功能展示", 10);
+    
+    HFONT hFeatureFont = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    HFONT hDescFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "宋体");
+    
+    const char* features[] = {
+        "?? 完整的桌面环境",
+        "?? 用户账户系统", 
+        "?? 真实文件管理器",
+        "?? 多功能计算器",
+        "?? 系统设置面板",
+        "?? 隐藏彩蛋游戏"
+    };
+    
+    const char* featureDetails[] = {
+        "仿Windows的完整桌面体验\n任务栏系统、窗口管理、多应用支持",
+        "OOBE配置向导、用户登录\n密码保护、个性化设置",
+        "真实文件系统操作\n目录浏览、文件操作、命令支持",
+        "科学计算、特殊彩蛋\n582彩蛋、班级纪念功能",
+        "主题切换、用户设置\n系统配置、个性化定制",
+        "水母逃亡游戏\n开发历程回顾彩蛋"
+    };
+    
+    SelectObject(hdc, hFeatureFont);
+    TextOut(hdc, centerX - 100, 120, features[currentDevStage], strlen(features[currentDevStage]));
+    
+    SelectObject(hdc, hDescFont);
+    
+    // 分行显示功能详情
+    char* detailCopy = _strdup(featureDetails[currentDevStage]);
+    char* line = strtok(detailCopy, "\n");
+    int lineY = 160;
+    
+    while (line != NULL) {
+        TextOut(hdc, centerX - 200, lineY, line, strlen(line));
+        line = strtok(NULL, "\n");
+        lineY += 25;
+    }
+    
+    free(detailCopy);
+    
+    // 绘制进度指示器
+    char progressText[50];
+    sprintf(progressText, "功能展示 %d/6", currentDevStage + 1);
+    TextOut(hdc, centerX - 40, centerY + 150, progressText, strlen(progressText));
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hTitleFont);
+    DeleteObject(hFeatureFont);
+    DeleteObject(hDescFont);
+}
+// 绘制致谢名单
+void DrawCredits(HDC hdc, int centerX, int centerY) {
+    HFONT hTitleFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+    TextOut(hdc, centerX - 100, 80, "开发人员名单", 10);
+    
+    HFONT hNameFont = CreateFont(28, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    HFONT hRoleFont = CreateFont(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "宋体");
+    HFONT hThanksFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, "楷体");
+    
+    // 在中央绘制大型守慧吉祥物
+    DrawShouhuiMascot(hdc, centerX - 60, centerY - 50, 120);
+    
+    SelectObject(hdc, hNameFont);
+    TextOut(hdc, centerX - 80, centerY + 80, "jammyjellyfish", 14);
+    
+    SelectObject(hdc, hRoleFont);
+    TextOut(hdc, centerX - 150, centerY + 120, "唯一开发者 · 项目创始人 · 代码艺术家", 38);
+    
+    SelectObject(hdc, hThanksFont);
+    
+    // 感谢信息
+    const char* thanksLines[] = {
+        "感谢所有测试过f系统的朋友们",
+        "感谢每一个发现彩蛋的探索者",
+        "项目历时近一年，终于圆满完成",
+        "f系统1.0 Professional - 梦想成真",
+		"我们只能知道fos的爸爸是谁，但却无法知道fos的妈妈是谁" 
+    };
+    
+    for (int i = 0; i < 5; i++) {
+        TextOut(hdc, centerX - 200, centerY + 160 + i * 30, thanksLines[i], strlen(thanksLines[i]));
+    }
+    
+    // 最终信息
+    TextOut(hdc, centerX - 120, centerY + 320, "按ESC键返回文件管理器", 20);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hTitleFont);
+    DeleteObject(hNameFont);
+    DeleteObject(hRoleFont);
+    DeleteObject(hThanksFont);
+}
 // 文件编辑器函数实现
 
 // 显示文件编辑器
@@ -1755,9 +4148,9 @@ void DrawFileEditor(HDC hdc, int centerX, int centerY) {
     
     char statusInfo[100];
     sprintf(statusInfo, "行: %d 列: %d 字符数: %d", cursorPosition, colCount, strlen(fileContent));
-    TextOut(hdc, editorRect.left + 10, editorRect.bottom - 20, statusInfo, strlen(statusInfo));
+    TextOut(hdc, editRect.left + 10, editRect.bottom - 20, statusInfo, strlen(statusInfo));
     
-    TextOut(hdc, editorRect.right - 200, editorRect.bottom - 20, "按Ctrl+S保存, Esc退出", 22);
+    TextOut(hdc, editRect.right - 200, editRect.bottom - 20, "按Ctrl+S保存, Esc退出", 22);
     
     SelectObject(hdc, hOldFont);
     DeleteObject(hStatusFont);
@@ -2729,11 +5122,11 @@ void HandleJellyfishGameInput(WPARAM wParam, HWND hwnd) {
 // 初始化版本信息
 void InitializeVersionInfo() {
     if (isActivated) {
-        sprintf(osVersion, "fOS %d.%d Professional (Build 200) - 已激活", MAJOR_VERSION, MINOR_VERSION);
+        sprintf(osVersion, "fOS %d.%d Professional (Build 400) - 已激活", MAJOR_VERSION, MINOR_VERSION);
     } else if (isTrialMode) {
-        sprintf(osVersion, "fOS %d.%d Professional (Build 200) - 试用版 (%d天)", MAJOR_VERSION, MINOR_VERSION, trialDaysRemaining);
+        sprintf(osVersion, "fOS %d.%d Professional (Build 400) - 试用版 (%d天)", MAJOR_VERSION, MINOR_VERSION, trialDaysRemaining);
     } else {
-        sprintf(osVersion, "fOS %d.%d Professional (Build 200) - 未激活", MAJOR_VERSION, MINOR_VERSION);
+        sprintf(osVersion, "fOS %d.%d Professional (Build 400) - 未激活", MAJOR_VERSION, MINOR_VERSION);
     }
     
     sprintf(buildInfo, "Build %d (fOS.%d.%d.Professional)", BUILD_VERSION, MAJOR_VERSION, MINOR_VERSION);
@@ -2955,7 +5348,6 @@ void DrawCDKeyInterface(HDC hdc, int centerX, int centerY) {
     
     // 绘制提示信息
     SelectObject(hdc, hSmallFont);
-    TextOut(hdc, centerX - 350, centerY + 220, "提示: 有效CD-KEY示例: FOS62-20250-JELLY-FISH6-2CLASS", 46);
     
     SelectObject(hdc, hOldFont);
     DeleteObject(hTitleFont);
@@ -2981,6 +5373,7 @@ void HandleCDKeyInput(char key) {
             strcpy(cdKeyErrorMsg, "无效的CD-KEY，请检查后重试");
         }
     } else if (key == 27) {
+        // 修复：试用版按钮按下后正确启动试用模式
         StartTrialMode(NULL);
     } else if (key >= 32 && key <= 126 && strlen(cdKeyInput) < 29) {
         int len = strlen(cdKeyInput);
@@ -3111,7 +5504,6 @@ void DrawOOBEProgress(HDC hdc, int centerX, int centerY) {
     DeleteObject(hStepFont);
 }
 
-// 验证OOBE输入
 BOOL ValidateOOBEInput() {
     oobeError = FALSE;
     
@@ -3130,6 +5522,13 @@ BOOL ValidateOOBEInput() {
             break;
             
         case 2:
+        	
+            if (skipPasswordSetup) {
+                strcpy(password, "1234");
+                strcpy(confirmPassword, "1234");
+                return TRUE;
+            }
+            
             if (strlen(password) == 0) {
                 oobeError = TRUE;
                 strcpy(oobeErrorMsg, "密码不能为空");
@@ -3237,7 +5636,7 @@ void DrawInputBox(HDC hdc, int x, int y, int width, int height, const char* labe
     SetTextColor(hdc, RGB(255, 255, 255));
 }
 
-// 绘制OOBE步骤界面
+// 绘制OOBE步骤界面 - 修复：添加密码跳过按钮和主题选择
 void DrawOOBEStep(HDC hdc, int centerX, int centerY) {
     HFONT hTitleFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
@@ -3259,7 +5658,7 @@ void DrawOOBEStep(HDC hdc, int centerX, int centerY) {
         case 0: {
             TextOut(hdc, centerX - 200, centerY - 250, "欢迎使用 f系统1.0 专业版", 22);
             SelectObject(hdc, hNormalFont);
-            TextOut(hdc, centerX - 300, centerY - 180, "感谢您选择 fOS 1.0 Professional", 30);
+            TextOut(hdc, centerX - 300, centerY - 180, "感谢您选择 fOS 1.0 Professional codename nori", 45);
             TextOut(hdc, centerX - 250, centerY - 140, "这是一个全新的操作系统体验", 26);
             
             // 显示激活状态
@@ -3326,14 +5725,31 @@ void DrawOOBEStep(HDC hdc, int centerX, int centerY) {
             DrawInputBox(hdc, centerX - 200, centerY - 120, 400, 35, "密码:", password, TRUE, TRUE, "输入密码（至少4个字符）");
             DrawInputBox(hdc, centerX - 200, centerY - 50, 400, 35, "确认密码:", confirmPassword, FALSE, TRUE, "再次输入密码");
             
+            // 修复：添加密码跳过按钮
+            RECT skipButtonRect = {centerX - 200, centerY + 20, centerX + 200, centerY + 60};
+            HBRUSH hSkipBrush = CreateSolidBrush(VISTA_ORANGE);
+            FillRect(hdc, &skipButtonRect, hSkipBrush);
+            DeleteObject(hSkipBrush);
+    
+            HPEN hSkipPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hSkipPen);
+            SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, centerX - 200, centerY + 20, centerX + 200, centerY + 60);
+            SelectObject(hdc, hOldPen);
+            DeleteObject(hSkipPen);
+    
+            SetTextColor(hdc, RGB(255, 255, 255));
+            SelectObject(hdc, hNormalFont);
+            TextOut(hdc, centerX - 60, centerY + 35, "跳过密码设置", 10);
+            
             if (oobeError) {
                 SetTextColor(hdc, VISTA_RED);
-                TextOut(hdc, centerX - 180, centerY + 10, oobeErrorMsg, strlen(oobeErrorMsg));
+                TextOut(hdc, centerX - 180, centerY + 80, oobeErrorMsg, strlen(oobeErrorMsg));
                 SetTextColor(hdc, RGB(255, 255, 255));
             }
             
             SelectObject(hdc, hSmallFont);
-            TextOut(hdc, centerX - 180, centerY + 50, "请输入密码，然后按Tab键继续", 28);
+            TextOut(hdc, centerX - 180, centerY + 100, "请输入密码，然后按Tab键继续，或点击跳过", 38);
             break;
         }
             
@@ -3344,17 +5760,21 @@ void DrawOOBEStep(HDC hdc, int centerX, int centerY) {
             
             DrawInputBox(hdc, centerX - 200, centerY - 120, 400, 35, "计算机名:", computerName, TRUE, FALSE, "输入计算机名称");
             
+            // 修复：添加主题选择
+            TextOut(hdc, centerX - 200, centerY - 50, "选择主题:", 8);
+            DrawThemeSelector(hdc, centerX - 200, centerY - 10, 400, 80);
+            
             if (oobeError) {
                 SetTextColor(hdc, VISTA_RED);
-                TextOut(hdc, centerX - 180, centerY - 70, oobeErrorMsg, strlen(oobeErrorMsg));
+                TextOut(hdc, centerX - 180, centerY + 70, oobeErrorMsg, strlen(oobeErrorMsg));
                 SetTextColor(hdc, RGB(255, 255, 255));
             }
             
             SelectObject(hdc, hSmallFont);
-            TextOut(hdc, centerX - 180, centerY + 30, "请输入计算机名，然后按Enter键完成配置", 36);
+            TextOut(hdc, centerX - 180, centerY + 100, "请输入计算机名，选择主题，然后按Enter键完成配置", 46);
             
             // 绘制完成按钮
-            RECT completeButtonRect = {centerX - 80, centerY + 80, centerX + 80, centerY + 120};
+            RECT completeButtonRect = {centerX - 80, centerY + 130, centerX + 80, centerY + 170};
             HBRUSH hCompleteBrush = CreateSolidBrush(VISTA_GREEN);
             FillRect(hdc, &completeButtonRect, hCompleteBrush);
             DeleteObject(hCompleteBrush);
@@ -3362,13 +5782,13 @@ void DrawOOBEStep(HDC hdc, int centerX, int centerY) {
             HPEN hCompletePen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
             HPEN hOldPen = (HPEN)SelectObject(hdc, hCompletePen);
             SelectObject(hdc, GetStockObject(NULL_BRUSH));
-            Rectangle(hdc, centerX - 80, centerY + 80, centerX + 80, centerY + 120);
+            Rectangle(hdc, centerX - 80, centerY + 130, centerX + 80, centerY + 170);
             SelectObject(hdc, hOldPen);
             DeleteObject(hCompletePen);
     
             SetTextColor(hdc, RGB(255, 255, 255));
             SelectObject(hdc, hNormalFont);
-            TextOut(hdc, centerX - 30, centerY + 95, "完成配置", 8);
+            TextOut(hdc, centerX - 30, centerY + 145, "完成配置", 8);
             break;
         }
     }
@@ -3437,7 +5857,7 @@ void HandleGuessInput(char key) {
         strcpy(normalizedGuess, guessInput);
         NormalizeString(normalizedGuess);
         
-        if (strcmp(normalizedGuess, "jammyjellyfish") == 0) {
+        if (strcmp(normalizedGuess, "huangzihan") == 0) {
             showFinalEgg = TRUE;
             showSpecialMessage = FALSE;
             specialMessageScrollY = 0;
@@ -3496,7 +5916,14 @@ void LoadConfig() {
 
 // 验证登录
 BOOL VerifyLogin() {
-    return (strcmp(loginUsername, username) == 0 && strcmp(loginPassword, password) == 0);
+    BOOL success = (strcmp(loginUsername, username) == 0 && strcmp(loginPassword, password) == 0);
+    
+    if (success) {
+        // 直接播放登录音乐
+        PlaySound("音乐\\登录.mp3", NULL, SND_FILENAME | SND_ASYNC);
+    }
+    
+    return success;
 }
 
 // 获取当前日期和时间
@@ -3541,7 +5968,7 @@ void UpdateSystemInfo() {
     lastSystemInfoUpdate = currentTime;
 }
 
-// 处理OOBE输入
+// 处理OOBE输入 - 修复：添加密码跳过和主题选择处理
 void HandleOOBEInput(char key) {
     switch (currentStep) {
         case 0:
@@ -3585,19 +6012,20 @@ void HandleOOBEInput(char key) {
             
         case 3:
             if (key == 8) {
-                if (strlen(confirmPassword) > 0) {
-                    confirmPassword[strlen(confirmPassword) - 1] = '\0';
+                if (strlen(computerName) > 0) {
+                    computerName[strlen(computerName) - 1] = '\0';
                 }
             } else if (key == 9) {
-                currentStep = 3;
+                // 修复：在主题选择步骤处理Tab键
+                currentThemeIndex = (currentThemeIndex + 1) % 4;
             } else if (key == 13) {
                 if (ValidateOOBEInput()) {
                     CompleteOOBE(NULL);
                 }
-            } else if (key >= 32 && key <= 126 && strlen(confirmPassword) < 49) {
-                int len = strlen(confirmPassword);
-                confirmPassword[len] = key;
-                confirmPassword[len + 1] = '\0';
+            } else if (key >= 32 && key <= 126 && strlen(computerName) < 49) {
+                int len = strlen(computerName);
+                computerName[len] = key;
+                computerName[len + 1] = '\0';
             }
             break;
     }
@@ -3813,7 +6241,7 @@ void DrawFOSBetaAnimation(HDC hdc, RECT rect) {
     char versionText[100];
     sprintf(versionText, "fOS %d.%d Build %d", MAJOR_VERSION, MINOR_VERSION, BUILD_VERSION);
     TextOut(hdc, centerX - 120, centerY - 80, versionText, strlen(versionText));
-    TextOut(hdc, centerX - 100, centerY - 40, "Professional Edition", 19);
+    TextOut(hdc, centerX - 200, centerY - 40, "Professional Edition(music plus!!!)", 35);
     
     SelectObject(hdc, hOldFont);
     DeleteObject(hVersionFont);
@@ -3823,9 +6251,9 @@ void DrawFOSBetaAnimation(HDC hdc, RECT rect) {
         DEFAULT_QUALITY, FIXED_PITCH, "Terminal");
     hOldFont = (HFONT)SelectObject(hdc, hInfoFont);
     
-    TextOut(hdc, centerX - 180, centerY + 10, "Initializing system components...", 32);
-    TextOut(hdc, centerX - 180, centerY + 40, "Loading kernel modules...", 25);
-    TextOut(hdc, centerX - 180, centerY + 70, "Starting services...", 20);
+    TextOut(hdc, centerX - 180, centerY + 10, "未泄漏内部测试版本，version 399", 31);
+    TextOut(hdc, centerX - 180, centerY + 40, "本软件版权归jammyjellyfish所有，严禁二次分发！", 46);
+    TextOut(hdc, centerX - 180, centerY + 70, "启动系统中……", 14);
     
     SelectObject(hdc, hOldFont);
     DeleteObject(hInfoFont);
@@ -3840,21 +6268,24 @@ void DrawFOSBetaAnimation(HDC hdc, RECT rect) {
     hOldFont = (HFONT)SelectObject(hdc, hProgressFont);
     
     char progressText[50];
-    sprintf(progressText, "Starting FOS... %d%%", fosProgressValue);
+    sprintf(progressText, "正在准备启动 FOS... %d%%", fosProgressValue);
     TextOut(hdc, centerX - 80, centerY + 150, progressText, strlen(progressText));
     
     SelectObject(hdc, hOldFont);
     DeleteObject(hProgressFont);
     
+    // 版权信息和致敬文字部分
     HFONT hCopyrightFont = CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, FIXED_PITCH, "Terminal");
     hOldFont = (HFONT)SelectObject(hdc, hCopyrightFont);
     
-    TextOut(hdc, centerX - 150, rect.bottom - 50, "(C) 2025 FOS Development Team. All rights reserved.", 52);
-    TextOut(hdc, centerX - 100, rect.bottom - 30, "Professional Edition", 19);
-    
+    TextOut(hdc, centerX - 150, rect.bottom - 50, "(C) 2025 FOS 开发组. 保留所有权利，严禁二次分发！", 49);
+    TextOut(hdc, centerX - 170, rect.bottom - 30, "Professional Edition.To all versions from fos0.0 to 1.0 Build 400", 65);
+
+    // 恢复原始设置
     SelectObject(hdc, hOldFont);
+    SetTextColor(hdc, RGB(0, 255, 0));
     DeleteObject(hCopyrightFont);
 }
 
@@ -4096,7 +6527,7 @@ void DrawLoginInterface(HDC hdc, int centerX, int centerY) {
     TextOut(hdc, centerX - 100, centerY - 200, "f系统1.0", 8);
     
     SelectObject(hdc, hNormalFont);
-    TextOut(hdc, centerX - 80, centerY - 150, "用户登录", 8);
+    TextOut(hdc, centerX - 80, centerY - 150, "用户会话登录", 12);
     
     DrawInputBox(hdc, centerX - 200, centerY - 80, 400, 35, "用户名:", loginUsername, currentStep == 0, FALSE, "输入用户名");
     DrawInputBox(hdc, centerX - 200, centerY - 10, 400, 35, "密码:", loginPassword, currentStep == 1, TRUE, "输入密码");
@@ -4166,7 +6597,7 @@ void DrawDesktop(HDC hdc, RECT rect) {
     
     SelectObject(hdc, hNormalFont);
     char welcomeMsg[100];
-    sprintf(welcomeMsg, "您好，%s", username);
+    sprintf(welcomeMsg, "欢迎您，%s", username);
     TextOut(hdc, centerX - 100, centerY - 30, welcomeMsg, strlen(welcomeMsg));
     
     char versionMsg[100];
@@ -4194,7 +6625,7 @@ void DrawDesktop(HDC hdc, RECT rect) {
     DeleteObject(hSmallFont);
 }
 
-// 绘制任务栏（在上方）
+// 绘制任务栏
 void DrawTaskbar(HDC hdc, RECT rect) {
     int taskbarHeight = 60;
     RECT taskbarRect = {0, 0, rect.right, taskbarHeight};
@@ -4212,22 +6643,9 @@ void DrawTaskbar(HDC hdc, RECT rect) {
     HFONT hOldFont = (HFONT)SelectObject(hdc, hTaskbarFont);
     
     char taskbarText[100];
-    sprintf(taskbarText, "f系统%d.%d | 用户: %s | 计算机: %s", MAJOR_VERSION, MINOR_VERSION, username, computerName);
+    sprintf(taskbarText, "f系统%d.%d | 用户: %s ", MAJOR_VERSION, MINOR_VERSION, username);
     TextOut(hdc, 10, 15, taskbarText, strlen(taskbarText));
     
-    // 显示激活状态
-    char activationText[50];
-    if (isActivated) {
-        sprintf(activationText, "专业版已激活");
-        SetTextColor(hdc, VISTA_GREEN);
-    } else if (isTrialMode) {
-        sprintf(activationText, "试用版 (%d天)", trialDaysRemaining);
-        SetTextColor(hdc, VISTA_ORANGE);
-    } else {
-        sprintf(activationText, "未激活");
-        SetTextColor(hdc, VISTA_RED);
-    }
-    TextOut(hdc, 400, 15, activationText, strlen(activationText));
     SetTextColor(hdc, RGB(255, 255, 255));
     
     // 显示时间
@@ -4235,48 +6653,70 @@ void DrawTaskbar(HDC hdc, RECT rect) {
     GetCurrentDateTime(dateStr, timeStr);
     
     char datetimeStr[100];
-    sprintf(datetimeStr, "%s %s", dateStr, timeStr);
+    sprintf(datetimeStr, "(c)版权归JammyJellyfish和fos编写组所有（2020-2030），严禁二次分发！ | %s %s", dateStr, timeStr);
     
     int textX = rect.right - GetTextWidth(hdc, datetimeStr) - 10;
     
     TextOut(hdc, textX, 15, datetimeStr, strlen(datetimeStr));
     
-    // 绘制任务栏按钮
+    // 修复：统一的任务栏按钮位置计算
     int buttonWidth = 100;
     int buttonHeight = 40;
     int buttonY = 10;
+    int buttonStartX = 200;
+    int buttonSpacing = 110;
+    int buttonIndex = 0;
     
     // 显示桌面按钮
-    DrawTaskbarButton(hdc, 200, buttonY, buttonWidth, buttonHeight, "显示桌面", 
+    int desktopX = buttonStartX + buttonSpacing * buttonIndex++;
+    DrawTaskbarButton(hdc, desktopX, buttonY, buttonWidth, buttonHeight, "显示桌面", 
                      isDesktopHovered, isDesktopPressed, FALSE);
     
     // 文件管理器按钮
-    DrawTaskbarButton(hdc, 310, buttonY, buttonWidth, buttonHeight, "文件管理", 
+    int fileX = buttonStartX + buttonSpacing * buttonIndex++;
+    DrawTaskbarButton(hdc, fileX, buttonY, buttonWidth, buttonHeight, "文件管理器", 
                      isFileManagerHovered, isFileManagerPressed, showFileManager);
     
     // 计算器按钮
-    DrawTaskbarButton(hdc, 420, buttonY, buttonWidth, buttonHeight, "计 算 器", 
+    int calcX = buttonStartX + buttonSpacing * buttonIndex++;
+    DrawTaskbarButton(hdc, calcX, buttonY, buttonWidth, buttonHeight, "计 算 器", 
                      isCalcHovered, isCalcPressed, showCalculator);
     
     // 系统信息按钮
-    DrawTaskbarButton(hdc, 530, buttonY, buttonWidth, buttonHeight, "系统信息", 
+    int sysinfoX = buttonStartX + buttonSpacing * buttonIndex++;
+    DrawTaskbarButton(hdc, sysinfoX, buttonY, buttonWidth, buttonHeight, "系统信息", 
                      isSysInfoHovered, isSysInfoPressed, showSystemInfo);
     
     // 设置按钮（专业版功能）
     if (isActivated) {
-        DrawTaskbarButton(hdc, 640, buttonY, buttonWidth, buttonHeight, "系统设置", 
+        int settingsX = buttonStartX + buttonSpacing * buttonIndex++;
+        DrawTaskbarButton(hdc, settingsX, buttonY, buttonWidth, buttonHeight, "系统设置", 
                          isSettingsHovered, isSettingsPressed, showSettings);
     }
     
     // 水母游戏按钮（猜对作者名字后显示）
     if (showGameButton) {
-        int gameX = isActivated ? 750 : 640;
+        int gameX = buttonStartX + buttonSpacing * buttonIndex++;
         DrawTaskbarButton(hdc, gameX, buttonY, buttonWidth, buttonHeight, "水母游戏", 
                          isGameHovered, isGamePressed, showGameEgg);
     }
     
+    // Bug报告按钮（专业版功能）
+    if (isActivated) {
+        int bugX = buttonStartX + buttonSpacing * buttonIndex++;
+        DrawTaskbarButton(hdc, bugX, buttonY, buttonWidth, buttonHeight, "Bug报告", 
+                         isBugHovered, isBugPressed, showBugReporter);
+    }
+    
+    // Bug列表按钮（专业版功能）
+    if (isActivated) {
+        int bugListX = buttonStartX + buttonSpacing * buttonIndex++;
+        DrawTaskbarButton(hdc, bugListX, buttonY, buttonWidth, buttonHeight, "Bug列表", 
+                         isBugListHovered, isBugListPressed, showBugList);
+    }
+    
     // 关机按钮
-    int shutdownX = showGameButton ? (isActivated ? 860 : 750) : (isActivated ? 750 : 640);
+    int shutdownX = buttonStartX + buttonSpacing * buttonIndex++;
     DrawTaskbarButton(hdc, shutdownX, buttonY, buttonWidth, buttonHeight, "关 机", 
                      isShutdownHovered, isShutdownPressed, FALSE);
     
@@ -4410,7 +6850,7 @@ void DrawFinalEgg(HDC hdc, int centerX, int centerY) {
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
     SelectObject(hdc, hNameFont);
-    TextOut(hdc, centerX - 100, textY, "JammyJellyfish", 14);
+    TextOut(hdc, centerX - 100, textY, "黄梓涵", 6);
     SelectObject(hdc, hContentFont);
     
     textY += 50;
@@ -4451,8 +6891,6 @@ void DrawFinalEgg(HDC hdc, int centerX, int centerY) {
         DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
     SelectObject(hdc, hButtonFont);
     
-    TextOut(hdc, centerX - 20, centerY + 195, "关闭", 4);
-    
     SelectObject(hdc, hOldFont);
     DeleteObject(hTitleFont);
     DeleteObject(hContentFont);
@@ -4473,7 +6911,7 @@ void DrawCalculator(HDC hdc, int centerX, int centerY) {
         // 自动滚动逻辑
         DWORD currentTime = GetTickCount();
         if (currentTime - lastScrollTime > 1) {
-            specialMessageScrollY--;
+            specialMessageScrollY-=10;
             lastScrollTime = currentTime;
             
             if (specialMessageScrollY < -1200) {
@@ -4574,11 +7012,11 @@ void DrawCalculator(HDC hdc, int centerX, int centerY) {
         const char* classmates[] = {
             "程思诚", "刘沈阳", "马槿荣", "鲍瑞璋", "吴子敬", "何家灏", "张紫辰", "方宸沣",
             "黄俊赫", "徐尹乐", "颜律恒", "丁思朗", "李辰逸", "费子尚", "王  森", "夏文豪",
-            "江俊序", "程骏楠", "董正宇", "陈宇彬", "杨锦岳", "黄梓涵", "郭光鑫", "方弘毅",
+            "江俊序", "程骏楠", "董正宇", "陈宇彬", "杨锦岳", "郭光鑫", "方弘毅",
             "刘美铄", "陈锦意", "金秋宜", "宋安琪", "章睦瑶", "李梦琪", "刘菁涵", "贾良睿",
             "胡乐艳", "陈琦钰", "陈  夕", "郝梓萱", "徐子淇", "柏钰涵", "张梓桐", "王诗诗",
             "姜涵月", "程昭檬", "杨晟熠", "袁翊宸", "刘雨棠", "刘思远", "马依一", "柏  典",
-            "饶铭宇"
+            "饶铭宇", "      " 
         };
         
         int totalClassmates = 49;
@@ -4609,7 +7047,7 @@ void DrawCalculator(HDC hdc, int centerX, int centerY) {
         // 绘制猜谜部分
         TextOut(hdc, centerX - 180, textY, "猜猜这个系统的开发者是谁？", 26);
         textY += 30;
-        TextOut(hdc, centerX - 180, textY, "提示：ubuntu", 12);
+        TextOut(hdc, centerX - 180, textY, "提示：似乎刚才的名单中少了谁（写出拼音）", 40);
         textY += 40;
         TextOut(hdc, centerX - 180, textY, "请输入答案：", 12);
         textY += 30;
@@ -4648,8 +7086,6 @@ void DrawCalculator(HDC hdc, int centerX, int centerY) {
         textY += 60;
         SetTextColor(hdc, RGB(100, 100, 100));
         TextOut(hdc, centerX - 180, textY, "按Enter键提交答案", 17);
-        textY += 30;
-        TextOut(hdc, centerX - 180, textY, "内容自动滚动中...", 17);
         
         // 恢复裁剪区域
         SelectClipRgn(hdc, NULL);
@@ -4865,7 +7301,7 @@ void DrawSystemInfo(HDC hdc, int centerX, int centerY) {
         DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
     SelectObject(hdc, hSmallFont);
     
-    TextOut(hdc, centerX - 250, textY, "? 2025 fOS Development Team", 26);
+    TextOut(hdc, centerX - 250, textY, "(c) 2025 fOS Development Team", 29);
     textY += 20;
     
     char versionText[100];
@@ -4958,7 +7394,7 @@ void DrawFileManager(HDC hdc, int centerX, int centerY) {
         DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
     HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
     
-    TextOut(hdc, centerX - 60, fileRect.top + 10, "File Manager", 11);
+    TextOut(hdc, centerX - 60, fileRect.top + 10, "文件管理器", 10);
     
     HFONT hContentFont = CreateFont(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
@@ -4966,7 +7402,7 @@ void DrawFileManager(HDC hdc, int centerX, int centerY) {
     SelectObject(hdc, hContentFont);
     
     // 显示当前路径
-    TextOut(hdc, fileRect.left + 20, fileRect.top + 50, "Path:", 5);
+    TextOut(hdc, fileRect.left + 20, fileRect.top + 50, "路径：", 6);
     TextOut(hdc, fileRect.left + 60, fileRect.top + 50, currentPath, strlen(currentPath));
     
     // 绘制命令输入区域
@@ -4983,7 +7419,7 @@ void DrawFileManager(HDC hdc, int centerX, int centerY) {
     DeleteObject(hInputPen);
     
     // 显示命令提示符和输入
-    TextOut(hdc, fileRect.left + 25, fileRect.top + 85, "C:\\>", 4);
+    TextOut(hdc, fileRect.left + 25, fileRect.top + 85, "∈->", 4);
     TextOut(hdc, fileRect.left + 65, fileRect.top + 85, commandInput, strlen(commandInput));
     
     // 绘制光标
@@ -5025,7 +7461,7 @@ void DrawFileManager(HDC hdc, int centerX, int centerY) {
     SelectObject(hdc, hSmallFont);
     
     SetTextColor(hdc, RGB(100, 100, 100));
-    TextOut(hdc, fileRect.left + 20, fileRect.bottom - 40, "Type 'help' for available commands", 32);
+    TextOut(hdc, fileRect.left + 20, fileRect.bottom - 40, "输入 'help' 查看可用命令", 24);
     
     SelectObject(hdc, hOldFont);
     DeleteObject(hTitleFont);
@@ -5048,6 +7484,7 @@ void CloseAllApps(HWND hwnd) {
     showSettings = FALSE;
     showSpecialMessage = FALSE;
     showFinalEgg = FALSE;
+    showBugReporter = FALSE;
     specialMessageScrollY = 0;
     if (hwnd) {
         InvalidateRect(hwnd, NULL, TRUE);
@@ -5065,6 +7502,7 @@ void StartOOBE(HWND hwnd) {
     strcpy(confirmPassword, "");
     strcpy(computerName, "FOS-PC");
     oobeError = FALSE;
+    skipPasswordSetup = FALSE;  // 重置密码跳过标志
     
     if (hwnd) {
         InvalidateRect(hwnd, NULL, TRUE);
@@ -5140,7 +7578,7 @@ void ShowDesktop(HWND hwnd) {
     }
 }
 
-// 显示关机动画
+// 修改ShowShutdownAnimation函数
 void ShowShutdownAnimation(HWND hwnd) {
     showShutdown = TRUE;
     showDesktop = FALSE;
@@ -5153,6 +7591,13 @@ void ShowShutdownAnimation(HWND hwnd) {
     showFinalEgg = FALSE;
     specialMessageScrollY = 0;
     shutdownProgress = 0;
+    
+    // 播放关机音乐
+    if (!shutdownMusicPlaying) {
+        PlaySound("音乐\\结束.wav", NULL, SND_FILENAME | SND_ASYNC);
+        shutdownMusicPlaying = TRUE;
+        shutdownMusicStartTime = GetTickCount();
+    }
     
     if (hwnd) {
         InvalidateRect(hwnd, NULL, TRUE);
@@ -5190,7 +7635,7 @@ void ShowFileManager(HWND hwnd) {
     if (IsFeatureAvailable(3)) {
         showFileManager = TRUE;
         strcpy(commandInput, "");
-        strcpy(commandOutput, "fOS File Manager v1.0 Professional\nType 'help' for available commands\n");
+        strcpy(commandOutput, "fOS 文件管理器 v1.0 专业版\n输入 'help' 查看可用命令\n");
         // 初始化当前路径
         if (strlen(currentPath) == 0) {
             GetCurrentDirectory(MAX_PATH, currentPath);
@@ -5279,19 +7724,24 @@ void ShowOOBE(HWND hwnd) {
     }
 }
 
-// 启动试用模式
+// 启动试用模式 - 修复：正确设置试用模式并启动OOBE
 void StartTrialMode(HWND hwnd) {
     isTrialMode = TRUE;
     isActivated = FALSE;
     trialDaysRemaining = 30;
     ApplyTrialRestrictions();
     
+    // 修复：直接启动OOBE，而不是跳转到老界面
     if (hwnd) {
-        ShowOOBE(hwnd);
+        showCDKeyScreen = FALSE;
+        showBootAnimation = FALSE;
+        showWelcome = FALSE;
+        showSecondScreen = FALSE;
+        StartOOBE(hwnd);
     }
 }
 
-// 窗口过程函数
+//窗口过程函数
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
     switch(Message) {
         case WM_CREATE: {
@@ -5299,6 +7749,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             InitializeSystemInfo();
             SetTimer(hwnd, 8, 40, NULL);
             SetTimer(hwnd, 7, 1000, NULL);
+            
+            // 创建网线接头背景
+//            CreateEthernetBackground(hwnd);
             break;
         }
         
@@ -5324,7 +7777,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             else if (wParam == 3) {
                 // 进度条动画定时器
                 progressValue = (progressValue + 2) % 100;
-                if (!showOOBE && !showComplete && !showDesktop && !showBootAnimation && !showLogin && !showCDKeyScreen && !showGameEgg && !showFileEditor && !showSettings) {
+                if (!showOOBE && !showComplete && !showDesktop && !showBootAnimation && !showLogin && !showCDKeyScreen && !showGameEgg && !showFileEditor && !showSettings && !showUSBError && !showBugReporter && !showBugList) {
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             }
@@ -5388,10 +7841,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 UpdateJellyfishGame(hwnd);
                 break;
             }
+            else if (wParam == 12 && showPurpleScreen) {
+                // 紫屏进度更新
+                purpleScreenProgress += 1;
+                if (purpleScreenProgress >= 100) {
+                    purpleScreenProgress = 100;
+                    // 保持在100%，不自动退出
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
         }
         
         case WM_CHAR: {
+            // 水母游戏优先处理
+            if (showGameEgg) {
+                HandleJellyfishGameInput(wParam, hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
+                return 0;
+            }
+            
+            // fos彩蛋输入处理
+            if (showFOSEgg) {
+                // 处理"castrate jellyfish"彩蛋的特殊输入
+                if (fosEggState == 5) {
+                    // 水母求饶界面只响应ESC键
+                    if (wParam == 27) { // ESC键
+                        showFOSEgg = FALSE;
+                        showFileManager = TRUE;
+                        fosInputCount = 0;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
+                return 0;
+            }
+            
             if (showCDKeyScreen) {
                 HandleCDKeyInput((char)wParam);
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -5420,6 +7904,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 HandleSettingsInput((char)wParam);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
+            else if (showBugReporter) {
+                HandleBugReporterInput((char)wParam);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (showBugList) {
+                HandleBugListInput((char)wParam);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (showPurpleScreen) {
+                HandlePurpleScreenInput((char)wParam, hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
         }
         
@@ -5433,9 +7929,86 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 return 0;
             }
             
+            if (showPurpleScreen) {
+                // 在紫屏状态下，检查Ctrl+Alt+E
+                if ((wParam == 'E' || wParam == 'e') && GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState(VK_MENU)) {
+                    // 触发重启
+                    ShowShutdownAnimation(hwnd);
+                    showPurpleScreen = FALSE;
+                    purpleScreenLocked = FALSE;
+                    return 0;
+                }
+            }
+            
+            // fos彩蛋按键处理（包含"castrate jellyfish"彩蛋）
+            if (showFOSEgg) {
+                if (wParam == VK_ESCAPE) {
+                    // ESC键跳过彩蛋
+                    showFOSEgg = FALSE;
+                    showFileManager = TRUE;
+                    fosInputCount = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                else if (wParam == VK_RETURN) {
+                    // Enter键翻页（水母求饶界面不需要翻页，直接返回）
+                    if (fosEggState == 5) {
+                        // "castrate jellyfish"彩蛋界面 - 按Enter直接返回
+                        showFOSEgg = FALSE;
+                        showFileManager = TRUE;
+                        fosInputCount = 0;
+                    } else {
+                        // 原有的fos彩蛋翻页逻辑
+                        switch (fosEggState) {
+                            case 1: { // 旁白对话
+                                dialogueIndexx++;
+                                if (dialogueIndexx >= 4) {
+                                    fosEggState = 2;
+                                    dialogueIndexx = 0;
+                                    currentDevStage = 0;
+                                }
+                                break;
+                            }
+                            case 2: { // 开发历程回顾
+                                currentDevStage++;
+                                if (currentDevStage >= 8) {
+                                    fosEggState = 3;
+                                    currentDevStage = 0;
+                                }
+                                break;
+                            }
+                            case 3: { // 功能展示
+                                currentDevStage++;
+                                if (currentDevStage >= 6) {
+                                    fosEggState = 4;
+                                    currentDevStage = 0;
+                                }
+                                break;
+                            }
+                            case 4: { // 致谢名单
+                                showFOSEgg = FALSE;
+                                showFileManager = TRUE;
+                                fosInputCount = 0;
+                                break;
+                            }
+                        }
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                return 0;
+            }   
+            
             // 文件编辑器特殊按键处理
             if (showFileEditor) {
                 HandleFileEditorSpecialKeys(wParam);
+                InvalidateRect(hwnd, NULL, TRUE);
+                return 0;
+            }
+            
+            // Bug列表特殊按键处理
+            if (showBugList) {
+                HandleBugListInput((char)wParam);
                 InvalidateRect(hwnd, NULL, TRUE);
                 return 0;
             }
@@ -5472,6 +8045,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 else if (wParam == VK_F4 && isActivated) {
                     ShowSettings(hwnd);
                 }
+                else if (wParam == VK_F5) {
+                    // F5打开Bug报告工具
+                    ShowBugReporter(hwnd);
+                }
+                else if (wParam == VK_F6 && isActivated) {
+                    // F6打开Bug列表
+                    ShowBugList(hwnd);
+                }
             }
             break;
         }
@@ -5481,6 +8062,249 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             int y = HIWORD(lParam);
             
             if (showGameEgg) {
+                return 0;
+            }
+            
+            // "castrate jellyfish"彩蛋界面点击处理
+            if (showFOSEgg && fosEggState == 5) {
+                // 水母求饶界面点击ESC区域也可以返回
+                RECT rect;
+                GetClientRect(hwnd, &rect);
+                int centerX = rect.right / 2;
+                
+                // 检查是否点击了ESC提示区域
+                HFONT hHintFont = CreateFont(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                    DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                    DEFAULT_QUALITY, DEFAULT_PITCH, "宋体");
+                HDC hdc = GetDC(hwnd);
+                HFONT hOldFont = (HFONT)SelectObject(hdc, hHintFont);
+                const char* hintText = "按ESC键返回文件管理器";
+                int textWidth = GetTextWidth(hdc, hintText);
+                int textX = centerX - textWidth / 2;
+                int textY = rect.bottom - 50;
+                
+                if (x >= textX && x <= textX + textWidth && 
+                    y >= textY && y <= textY + 20) {
+                    showFOSEgg = FALSE;
+                    showFileManager = TRUE;
+                    fosInputCount = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+                
+                SelectObject(hdc, hOldFont);
+                DeleteObject(hHintFont);
+                ReleaseDC(hwnd, hdc);
+                return 0;
+            }
+            
+            // Bug列表点击处理
+            if (showBugList) {
+                AppRect bugListRect = GetAppRect(hwnd, 8); // 假设8是Bug列表的appType
+                
+                int relX = x - bugListRect.left;
+                int relY = y - bugListRect.top;
+                
+                // 列表区域
+                RECT listRect = {bugListRect.left + 20, bugListRect.top + 50, bugListRect.right - 20, bugListRect.bottom - 80};
+                if (relX >= 20 && relX <= (bugListRect.right - bugListRect.left - 20) &&
+                    relY >= 50 && relY <= (bugListRect.bottom - bugListRect.top - 80)) {
+                    
+                    int itemHeight = 25;
+                    int startY = 90; // listRect.top + 40 的相对位置
+                    int clickIndex = (relY - startY) / itemHeight + bugListScroll;
+                    
+                    if (clickIndex >= 0 && clickIndex < bugListCount) {
+                        selectedBugIndex = clickIndex;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                    
+                    // 检查复选框点击
+                    int col1 = 30; // 第一列位置
+                    if (relX >= col1 && relX <= col1 + 15 && 
+                        relY >= startY + clickIndex * itemHeight + 5 && 
+                        relY <= startY + clickIndex * itemHeight + 20) {
+                        if (clickIndex >= 0 && clickIndex < bugListCount) {
+                            ToggleBugFixedStatus(clickIndex);
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        }
+                    }
+                    return 0;
+                }
+                
+                // 操作按钮区域
+                int buttonWidth = 100;
+                int buttonHeight = 35;
+                int buttonY = bugListRect.bottom - 60;
+                int centerX = (bugListRect.right - bugListRect.left) / 2;
+                int buttonSpacing = 120;
+                
+                // 标记修复/取消修复按钮
+                RECT toggleButtonRect = {centerX - buttonSpacing * 2, buttonY, centerX - buttonSpacing * 2 + buttonWidth, buttonY + buttonHeight};
+                if (relX >= centerX - buttonSpacing * 2 && relX <= centerX - buttonSpacing * 2 + buttonWidth &&
+                    relY >= buttonY && relY <= buttonY + buttonHeight && selectedBugIndex >= 0) {
+                    ToggleBugFixedStatus(selectedBugIndex);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                // 删除按钮
+                RECT deleteButtonRect = {centerX - buttonSpacing, buttonY, centerX - buttonSpacing + buttonWidth, buttonY + buttonHeight};
+                if (relX >= centerX - buttonSpacing && relX <= centerX - buttonSpacing + buttonWidth &&
+                    relY >= buttonY && relY <= buttonY + buttonHeight && selectedBugIndex >= 0) {
+                    DeleteBug(selectedBugIndex);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                // 刷新按钮
+                RECT refreshButtonRect = {centerX, buttonY, centerX + buttonWidth, buttonY + buttonHeight};
+                if (relX >= centerX && relX <= centerX + buttonWidth &&
+                    relY >= buttonY && relY <= buttonY + buttonHeight) {
+                    LoadBugListFromFile();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                // 关闭按钮
+                RECT closeButtonRect = {centerX + buttonSpacing, buttonY, centerX + buttonSpacing + buttonWidth, buttonY + buttonHeight};
+                if (relX >= centerX + buttonSpacing && relX <= centerX + buttonSpacing + buttonWidth &&
+                    relY >= buttonY && relY <= buttonY + buttonHeight) {
+                    showBugList = FALSE;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                return 0;
+            }
+            
+            // Bug记录软件点击处理
+            if (showBugReporter) {
+                AppRect bugRect = GetAppRect(hwnd, 7);
+                
+                int relX = x - bugRect.left;
+                int relY = y - bugRect.top;
+                
+                if (bugSubmitted) {
+                    // 成功界面关闭按钮
+                    RECT closeButtonRect = {bugRect.left + 340, bugRect.top + 350, bugRect.left + 460, bugRect.top + 390};
+                    if (relX >= 340 && relX <= 460 && relY >= 350 && relY <= 390) {
+                        showBugReporter = FALSE;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                    return 0;
+                }
+                
+                // 分类选择
+                RECT categoryRect = {bugRect.left + 120, bugRect.top + 95, bugRect.left + 370, bugRect.top + 125};
+                if (relX >= 120 && relX <= 370 && relY >= 95 && relY <= 125) {
+                    int categoryWidth = 250 / 5;
+                    int selectedCategory = (relX - 120) / categoryWidth;
+                    bugCategory = selectedCategory;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                // 严重程度选择
+                RECT severityRect = {bugRect.left + 120, bugRect.top + 135, bugRect.left + 370, bugRect.top + 165};
+                if (relX >= 120 && relX <= 370 && relY >= 135 && relY <= 165) {
+                    int severityWidth = 250 / 4;
+                    int selectedSeverity = (relX - 120) / severityWidth + 1;
+                    bugSeverity = selectedSeverity;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                // 标题输入框点击
+                RECT titleInputRect = {bugRect.left + 120, bugRect.top + 55, bugRect.right - 20, bugRect.top + 85};
+                if (relX >= 120 && relX <= (bugRect.right - bugRect.left - 20) && relY >= 55 && relY <= 85) {
+                    currentField = 0; // 激活标题输入
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                // 描述输入框点击
+                RECT descInputRect = {bugRect.left + 20, bugRect.top + 205, bugRect.right - 20, bugRect.top + 350};
+                if (relX >= 20 && relX <= (bugRect.right - bugRect.left - 20) && relY >= 205 && relY <= 350) {
+                    currentField = 1; // 激活描述输入
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                // 提交按钮
+                RECT submitButtonRect = {bugRect.left + 280, bugRect.top + 550, bugRect.left + 380, bugRect.top + 585};
+                if (relX >= 280 && relX <= 380 && relY >= 550 && relY <= 585) {
+                    SubmitBugReport();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                // 取消按钮
+                RECT cancelButtonRect = {bugRect.left + 420, bugRect.top + 550, bugRect.left + 520, bugRect.top + 585};
+                if (relX >= 420 && relX <= 520 && relY >= 550 && relY <= 585) {
+                    showBugReporter = FALSE;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    return 0;
+                }
+                
+                return 0;
+            }
+            
+            // 修复：OOBE界面鼠标点击处理
+            if (showOOBE) {
+                RECT clientRect;
+                GetClientRect(hwnd, &clientRect);
+                int centerX = clientRect.right / 2;
+                int centerY = clientRect.bottom / 2;
+                
+                switch (currentStep) {
+                    case 0: {
+                        // 欢迎界面点击开始设置按钮
+                        RECT buttonRect = {centerX - 80, centerY + 80, centerX + 80, centerY + 120};
+                        if (x >= buttonRect.left && x <= buttonRect.right &&
+                            y >= buttonRect.top && y <= buttonRect.bottom) {
+                            currentStep = 1;
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        }
+                        break;
+                    }
+                    case 2: {
+                        // 密码设置界面点击跳过按钮
+                        RECT skipButtonRect = {centerX - 200, centerY + 20, centerX + 200, centerY + 60};
+                        if (x >= skipButtonRect.left && x <= skipButtonRect.right &&
+                            y >= skipButtonRect.top && y <= skipButtonRect.bottom) {
+                            skipPasswordSetup = TRUE;
+                            currentStep = 3;
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        }
+                        break;
+                    }
+                    case 3: {
+                        // 主题选择界面点击主题
+                        int themeWidth = 400 / 4;
+                        int themeStartX = centerX - 200;
+                        int themeStartY = centerY - 10;
+                        
+                        for (int i = 0; i < 4; i++) {
+                            int themeX = themeStartX + i * themeWidth;
+                            if (x >= themeX && x <= themeX + themeWidth &&
+                                y >= themeStartY && y <= themeStartY + 80) {
+                                currentThemeIndex = i;
+                                InvalidateRect(hwnd, NULL, TRUE);
+                                break;
+                            }
+                        }
+                        
+                        // 完成配置按钮
+                        RECT completeButtonRect = {centerX - 80, centerY + 130, centerX + 80, centerY + 170};
+                        if (x >= completeButtonRect.left && x <= completeButtonRect.right &&
+                            y >= completeButtonRect.top && y <= completeButtonRect.bottom) {
+                            if (ValidateOOBEInput()) {
+                                CompleteOOBE(hwnd);
+                            }
+                        }
+                        break;
+                    }
+                }
                 return 0;
             }
             
@@ -5589,12 +8413,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             }
             
             if (showDesktop) {
+                // 修复：统一的任务栏按钮位置计算
                 int buttonWidth = 100;
                 int buttonHeight = 40;
                 int buttonY = 10;
+                int buttonStartX = 200;
+                int buttonSpacing = 110;
+                int buttonIndex = 0;
                 
                 // 显示桌面按钮
-                RECT desktopRect = {200, buttonY, 200 + buttonWidth, buttonY + buttonHeight};
+                int desktopX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT desktopRect = {desktopX, buttonY, desktopX + buttonWidth, buttonY + buttonHeight};
                 if (x >= desktopRect.left && x <= desktopRect.right &&
                     y >= desktopRect.top && y <= desktopRect.bottom) {
                     isDesktopPressed = TRUE;
@@ -5603,7 +8432,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 }
                 
                 // 文件管理器按钮
-                RECT fileRect = {310, buttonY, 310 + buttonWidth, buttonY + buttonHeight};
+                int fileX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT fileRect = {fileX, buttonY, fileX + buttonWidth, buttonY + buttonHeight};
                 if (x >= fileRect.left && x <= fileRect.right &&
                     y >= fileRect.top && y <= fileRect.bottom) {
                     isFileManagerPressed = TRUE;
@@ -5612,7 +8442,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 }
                 
                 // 计算器按钮
-                RECT calcRect = {420, buttonY, 420 + buttonWidth, buttonY + buttonHeight};
+                int calcX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT calcRect = {calcX, buttonY, calcX + buttonWidth, buttonY + buttonHeight};
                 if (x >= calcRect.left && x <= calcRect.right &&
                     y >= calcRect.top && y <= calcRect.bottom) {
                     isCalcPressed = TRUE;
@@ -5621,7 +8452,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 }
                 
                 // 系统信息按钮
-                RECT sysinfoRect = {530, buttonY, 530 + buttonWidth, buttonY + buttonHeight};
+                int sysinfoX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT sysinfoRect = {sysinfoX, buttonY, sysinfoX + buttonWidth, buttonY + buttonHeight};
                 if (x >= sysinfoRect.left && x <= sysinfoRect.right &&
                     y >= sysinfoRect.top && y <= sysinfoRect.bottom) {
                     isSysInfoPressed = TRUE;
@@ -5631,7 +8463,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 
                 // 设置按钮（专业版）
                 if (isActivated) {
-                    RECT settingsRect = {640, buttonY, 640 + buttonWidth, buttonY + buttonHeight};
+                    int settingsX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT settingsRect = {settingsX, buttonY, settingsX + buttonWidth, buttonY + buttonHeight};
                     if (x >= settingsRect.left && x <= settingsRect.right &&
                         y >= settingsRect.top && y <= settingsRect.bottom) {
                         isSettingsPressed = TRUE;
@@ -5642,7 +8475,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 
                 // 水母游戏按钮
                 if (showGameButton) {
-                    int gameX = isActivated ? 750 : 640;
+                    int gameX = buttonStartX + buttonSpacing * buttonIndex++;
                     RECT gameRect = {gameX, buttonY, gameX + buttonWidth, buttonY + buttonHeight};
                     if (x >= gameRect.left && x <= gameRect.right &&
                         y >= gameRect.top && y <= gameRect.bottom) {
@@ -5652,8 +8485,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                     }
                 }
                 
+                // Bug报告按钮（专业版功能）
+                if (isActivated) {
+                    int bugX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT bugRect = {bugX, buttonY, bugX + buttonWidth, buttonY + buttonHeight};
+                    if (x >= bugRect.left && x <= bugRect.right &&
+                        y >= bugRect.top && y <= bugRect.bottom) {
+                        isBugPressed = TRUE;
+                        InvalidateRect(hwnd, &bugRect, TRUE);
+                        return 0;
+                    }
+                }
+                
+                // Bug列表按钮（专业版功能）
+                if (isActivated) {
+                    int bugListX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT bugListRect = {bugListX, buttonY, bugListX + buttonWidth, buttonY + buttonHeight};
+                    if (x >= bugListRect.left && x <= bugListRect.right &&
+                        y >= bugListRect.top && y <= bugListRect.bottom) {
+                        isBugListPressed = TRUE;
+                        InvalidateRect(hwnd, &bugListRect, TRUE);
+                        return 0;
+                    }
+                }
+                
                 // 关机按钮
-                int shutdownX = showGameButton ? (isActivated ? 860 : 750) : (isActivated ? 750 : 640);
+                int shutdownX = buttonStartX + buttonSpacing * buttonIndex++;
                 RECT shutdownRect = {shutdownX, buttonY, shutdownX + buttonWidth, buttonY + buttonHeight};
                 if (x >= shutdownRect.left && x <= shutdownRect.right &&
                     y >= shutdownRect.top && y <= shutdownRect.bottom) {
@@ -5775,35 +8632,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hwnd, NULL, TRUE);
                 return 0;
             }
-            else if (showOOBE && currentStep == 0) {
-                // 检查是否点击了开始设置按钮
-                RECT clientRect;
-                GetClientRect(hwnd, &clientRect);
-                int centerX = clientRect.right / 2;
-                int centerY = clientRect.bottom / 2;
-                
-                RECT buttonRect = {centerX - 80, centerY + 80, centerX + 80, centerY + 120};
-                if (x >= buttonRect.left && x <= buttonRect.right &&
-                    y >= buttonRect.top && y <= buttonRect.bottom) {
-                    currentStep = 1;
-                    InvalidateRect(hwnd, NULL, TRUE);
-                }
-            }
-            else if (showOOBE && currentStep == 3) {
-                // 检查是否点击了完成配置按钮
-                RECT clientRect;
-                GetClientRect(hwnd, &clientRect);
-                int centerX = clientRect.right / 2;
-                int centerY = clientRect.bottom / 2;
-                
-                RECT buttonRect = {centerX - 80, centerY + 80, centerX + 80, centerY + 120};
-                if (x >= buttonRect.left && x <= buttonRect.right &&
-                    y >= buttonRect.top && y <= buttonRect.bottom) {
-                    if (ValidateOOBEInput()) {
-                        CompleteOOBE(hwnd);
-                    }
-                }
-            }
             break;
         }
         
@@ -5812,12 +8640,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             int y = HIWORD(lParam);
             
             if (showDesktop) {
+                // 修复：统一的任务栏按钮位置计算
                 int buttonWidth = 100;
                 int buttonHeight = 40;
                 int buttonY = 10;
+                int buttonStartX = 200;
+                int buttonSpacing = 110;
+                int buttonIndex = 0;
                 
                 // 显示桌面按钮
-                RECT desktopRect = {200, buttonY, 200 + buttonWidth, buttonY + buttonHeight};
+                int desktopX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT desktopRect = {desktopX, buttonY, desktopX + buttonWidth, buttonY + buttonHeight};
                 if (isDesktopPressed) {
                     isDesktopPressed = FALSE;
                     InvalidateRect(hwnd, &desktopRect, TRUE);
@@ -5829,7 +8662,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 }
                 
                 // 文件管理器按钮
-                RECT fileRect = {310, buttonY, 310 + buttonWidth, buttonY + buttonHeight};
+                int fileX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT fileRect = {fileX, buttonY, fileX + buttonWidth, buttonY + buttonHeight};
                 if (isFileManagerPressed) {
                     isFileManagerPressed = FALSE;
                     InvalidateRect(hwnd, &fileRect, TRUE);
@@ -5841,7 +8675,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 }
                 
                 // 计算器按钮
-                RECT calcRect = {420, buttonY, 420 + buttonWidth, buttonY + buttonHeight};
+                int calcX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT calcRect = {calcX, buttonY, calcX + buttonWidth, buttonY + buttonHeight};
                 if (isCalcPressed) {
                     isCalcPressed = FALSE;
                     InvalidateRect(hwnd, &calcRect, TRUE);
@@ -5853,7 +8688,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 }
                 
                 // 系统信息按钮
-                RECT sysinfoRect = {530, buttonY, 530 + buttonWidth, buttonY + buttonHeight};
+                int sysinfoX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT sysinfoRect = {sysinfoX, buttonY, sysinfoX + buttonWidth, buttonY + buttonHeight};
                 if (isSysInfoPressed) {
                     isSysInfoPressed = FALSE;
                     InvalidateRect(hwnd, &sysinfoRect, TRUE);
@@ -5866,7 +8702,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 
                 // 设置按钮（专业版）
                 if (isActivated) {
-                    RECT settingsRect = {640, buttonY, 640 + buttonWidth, buttonY + buttonHeight};
+                    int settingsX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT settingsRect = {settingsX, buttonY, settingsX + buttonWidth, buttonY + buttonHeight};
                     if (isSettingsPressed) {
                         isSettingsPressed = FALSE;
                         InvalidateRect(hwnd, &settingsRect, TRUE);
@@ -5880,7 +8717,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 
                 // 水母游戏按钮
                 if (showGameButton) {
-                    int gameX = isActivated ? 750 : 640;
+                    int gameX = buttonStartX + buttonSpacing * buttonIndex++;
                     RECT gameRect = {gameX, buttonY, gameX + buttonWidth, buttonY + buttonHeight};
                     if (isGamePressed) {
                         isGamePressed = FALSE;
@@ -5900,8 +8737,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                     }
                 }
                 
+                // Bug报告按钮（专业版功能）
+                if (isActivated) {
+                    int bugX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT bugRect = {bugX, buttonY, bugX + buttonWidth, buttonY + buttonHeight};
+                    if (isBugPressed) {
+                        isBugPressed = FALSE;
+                        InvalidateRect(hwnd, &bugRect, TRUE);
+                        
+                        if (x >= bugRect.left && x <= bugRect.right &&
+                            y >= bugRect.top && y <= bugRect.bottom) {
+                            ShowBugReporter(hwnd);
+                        }
+                    }
+                }
+                
+                // Bug列表按钮（专业版功能）
+                if (isActivated) {
+                    int bugListX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT bugListRect = {bugListX, buttonY, bugListX + buttonWidth, buttonY + buttonHeight};
+                    if (isBugListPressed) {
+                        isBugListPressed = FALSE;
+                        InvalidateRect(hwnd, &bugListRect, TRUE);
+                        
+                        if (x >= bugListRect.left && x <= bugListRect.right &&
+                            y >= bugListRect.top && y <= bugListRect.bottom) {
+                            ShowBugList(hwnd);
+                        }
+                    }
+                }
+                
                 // 关机按钮
-                int shutdownX = showGameButton ? (isActivated ? 860 : 750) : (isActivated ? 750 : 640);
+                int shutdownX = buttonStartX + buttonSpacing * buttonIndex++;
                 RECT shutdownRect = {shutdownX, buttonY, shutdownX + buttonWidth, buttonY + buttonHeight};
                 if (isShutdownPressed) {
                     isShutdownPressed = FALSE;
@@ -5921,26 +8788,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             int y = HIWORD(lParam);
             
             if (showDesktop) {
+                // 修复：统一的任务栏按钮位置计算
                 int buttonWidth = 100;
                 int buttonHeight = 40;
                 int buttonY = 10;
+                int buttonStartX = 200;
+                int buttonSpacing = 110;
+                int buttonIndex = 0;
                 
-                RECT desktopRect = {200, buttonY, 200 + buttonWidth, buttonY + buttonHeight};
+                // 显示桌面按钮
+                int desktopX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT desktopRect = {desktopX, buttonY, desktopX + buttonWidth, buttonY + buttonHeight};
                 BOOL wasDesktopHovered = isDesktopHovered;
                 isDesktopHovered = (x >= desktopRect.left && x <= desktopRect.right &&
                                   y >= desktopRect.top && y <= desktopRect.bottom);
                 
-                RECT fileRect = {310, buttonY, 310 + buttonWidth, buttonY + buttonHeight};
+                // 文件管理器按钮
+                int fileX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT fileRect = {fileX, buttonY, fileX + buttonWidth, buttonY + buttonHeight};
                 BOOL wasFileManagerHovered = isFileManagerHovered;
                 isFileManagerHovered = (x >= fileRect.left && x <= fileRect.right &&
                                       y >= fileRect.top && y <= fileRect.bottom);
                 
-                RECT calcRect = {420, buttonY, 420 + buttonWidth, buttonY + buttonHeight};
+                // 计算器按钮
+                int calcX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT calcRect = {calcX, buttonY, calcX + buttonWidth, buttonY + buttonHeight};
                 BOOL wasCalcHovered = isCalcHovered;
                 isCalcHovered = (x >= calcRect.left && x <= calcRect.right &&
                                y >= calcRect.top && y <= calcRect.bottom);
                 
-                RECT sysinfoRect = {530, buttonY, 530 + buttonWidth, buttonY + buttonHeight};
+                // 系统信息按钮
+                int sysinfoX = buttonStartX + buttonSpacing * buttonIndex++;
+                RECT sysinfoRect = {sysinfoX, buttonY, sysinfoX + buttonWidth, buttonY + buttonHeight};
                 BOOL wasSysInfoHovered = isSysInfoHovered;
                 isSysInfoHovered = (x >= sysinfoRect.left && x <= sysinfoRect.right &&
                                   y >= sysinfoRect.top && y <= sysinfoRect.bottom);
@@ -5948,7 +8827,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 // 设置按钮悬停（专业版）
                 BOOL wasSettingsHovered = isSettingsHovered;
                 if (isActivated) {
-                    RECT settingsRect = {640, buttonY, 640 + buttonWidth, buttonY + buttonHeight};
+                    int settingsX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT settingsRect = {settingsX, buttonY, settingsX + buttonWidth, buttonY + buttonHeight};
                     isSettingsHovered = (x >= settingsRect.left && x <= settingsRect.right &&
                                        y >= settingsRect.top && y <= settingsRect.bottom);
                 } else {
@@ -5958,7 +8838,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 // 水母游戏按钮悬停
                 BOOL wasGameHovered = isGameHovered;
                 if (showGameButton) {
-                    int gameX = isActivated ? 750 : 640;
+                    int gameX = buttonStartX + buttonSpacing * buttonIndex++;
                     RECT gameRect = {gameX, buttonY, gameX + buttonWidth, buttonY + buttonHeight};
                     isGameHovered = (x >= gameRect.left && x <= gameRect.right &&
                                    y >= gameRect.top && y <= gameRect.bottom);
@@ -5966,8 +8846,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                     isGameHovered = FALSE;
                 }
                 
+                // Bug报告按钮悬停
+                BOOL wasBugHovered = isBugHovered;
+                if (isActivated) {
+                    int bugX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT bugRect = {bugX, buttonY, bugX + buttonWidth, buttonY + buttonHeight};
+                    isBugHovered = (x >= bugRect.left && x <= bugRect.right &&
+                                  y >= bugRect.top && y <= bugRect.bottom);
+                } else {
+                    isBugHovered = FALSE;
+                }
+                
+                // Bug列表按钮悬停
+                BOOL wasBugListHovered = isBugListHovered;
+                if (isActivated) {
+                    int bugListX = buttonStartX + buttonSpacing * buttonIndex++;
+                    RECT bugListRect = {bugListX, buttonY, bugListX + buttonWidth, buttonY + buttonHeight};
+                    isBugListHovered = (x >= bugListRect.left && x <= bugListRect.right &&
+                                      y >= bugListRect.top && y <= bugListRect.bottom);
+                } else {
+                    isBugListHovered = FALSE;
+                }
+                
                 // 关机按钮悬停
-                int shutdownX = showGameButton ? (isActivated ? 860 : 750) : (isActivated ? 750 : 640);
+                int shutdownX = buttonStartX + buttonSpacing * buttonIndex++;
                 RECT shutdownRect = {shutdownX, buttonY, shutdownX + buttonWidth, buttonY + buttonHeight};
                 BOOL wasShutdownHovered = isShutdownHovered;
                 isShutdownHovered = (x >= shutdownRect.left && x <= shutdownRect.right &&
@@ -5979,13 +8881,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                     wasSysInfoHovered != isSysInfoHovered ||
                     wasSettingsHovered != isSettingsHovered ||
                     wasGameHovered != isGameHovered ||
+                    wasBugHovered != isBugHovered ||
+                    wasBugListHovered != isBugListHovered ||
                     wasShutdownHovered != isShutdownHovered) {
                     RECT taskbarRect = {0, 0, GetSystemMetrics(SM_CXSCREEN), 60};
                     InvalidateRect(hwnd, &taskbarRect, TRUE);
                 }
                 
                 if (isDesktopHovered || isFileManagerHovered || isCalcHovered || 
-                    isSysInfoHovered || isSettingsHovered || isGameHovered || isShutdownHovered) {
+                    isSysInfoHovered || isSettingsHovered || isGameHovered || 
+                    isBugHovered || isBugListHovered || isShutdownHovered) {
                     SetCursor(LoadCursor(NULL, IDC_HAND));
                 } else {
                     SetCursor(LoadCursor(NULL, IDC_ARROW));
@@ -6010,6 +8915,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             if (hBackgroundBitmap) {
                 DeleteObject(hBackgroundBitmap);
             }
+            if (hEthernetBackground) {
+                DeleteObject(hEthernetBackground);
+            }
             
             // 保存配置
             SaveConfig();
@@ -6032,9 +8940,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             int centerX = rect.right / 2;
             int centerY = rect.bottom / 2;
             
+            if (showPurpleScreen) {
+                DrawCriticalPurpleScreen(hdc, rect);
+                EndPaint(hwnd, &ps);
+                return 0;
+            }
+            
             // 水母游戏优先绘制
             if (showGameEgg) {
                 DrawJellyfishGame(hdc, hwnd);
+                EndPaint(hwnd, &ps);
+                return 0;
+            }
+            
+            // fos彩蛋绘制（包含彩蛋）
+            if (showFOSEgg) {
+                DrawFOSEgg(hdc, hwnd);
                 EndPaint(hwnd, &ps);
                 return 0;
             }
@@ -6070,6 +8991,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                 if (showSettings) {
                     DrawSettings(hdc, centerX, centerY);
                 }
+                if (showBugReporter) {
+                    DrawBugReporter(hdc, centerX, centerY);
+                }
+                if (showBugList) {
+                    DrawBugList(hdc, centerX, centerY);
+                }
             } else {
                 DrawVistaBackground(hdc, rect);
                 
@@ -6085,11 +9012,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                         DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
                     
                     HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
-                    TextOut(hdc, centerX - 180, centerY - 100, "f系统1.0 专业版", 14);
+                    TextOut(hdc, centerX - 180, centerY - 100, "系统应急修复程序", 16);
                     SelectObject(hdc, hNormalFont);
-                    TextOut(hdc, centerX - 180, centerY - 30, "欢迎使用 f系统1.0 专业版", 24);
-                    TextOut(hdc, centerX - 180, centerY + 10, "在使用系统前，请确保您的所有软件已经关闭", 40);
-                    TextOut(hdc, centerX - 180, centerY + 50, "5秒钟后进入...", 14);
+                    TextOut(hdc, centerX - 180, centerY - 30, "我们检测到您的系统出现了问题", 28);
+                    TextOut(hdc, centerX - 180, centerY + 10, "我们进入了此修补程序", 20);
+                    TextOut(hdc, centerX - 180, centerY + 50, "你的文件将会保留，如果进度条卡住，请按空格键以推动进度条", 56);
                     SelectObject(hdc, hOldFont);
                     
                     DrawVistaProgressBar(hdc, centerX - 200, centerY + 100, 400, 20, progressValue);
@@ -6106,11 +9033,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
                         DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
                     
                     HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
-                    TextOut(hdc, centerX - 180, centerY - 120, "海内存知己，天涯若比邻", 22);
+                    TextOut(hdc, centerX - 180, centerY - 120, "系统应急修复程序", 16);
                     SelectObject(hdc, hNormalFont);
                     TextOut(hdc, centerX - 180, centerY - 50, "请稍后...", 9);
-                    TextOut(hdc, centerX - 180, centerY, "系统正在为第一次启动做准备！", 28);
-                    TextOut(hdc, centerX - 180, centerY + 50, "用户验证: 修补程序工作", 22);
+                    TextOut(hdc, centerX - 180, centerY, "正在初始化应急修复程序，如果进度条卡住，请按空格键以推动进度条", 62);
+                    TextOut(hdc, centerX - 180, centerY + 50, "正在启动: 修补程序", 18);
                     SelectObject(hdc, hOldFont);
                     
                     DrawVistaProgressBar(hdc, centerX - 200, centerY + 100, 400, 20, progressValue);
@@ -6149,13 +9076,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) 
             EndPaint(hwnd, &ps);
             break;
         }
-        
         default:
             return DefWindowProc(hwnd, Message, wParam, lParam);
     }
     return 0;
-}
-
+} 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     WNDCLASSEX wc;
     HWND hwnd;
@@ -6167,7 +9092,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hInstance     = hInstance;
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-    wc.lpszClassName = "f系统1.0-beta";
+    wc.lpszClassName = "f系统1.0-codename nori(music plus!!!)";
     wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
     wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
     wc.style         = CS_HREDRAW | CS_VREDRAW;
@@ -6182,8 +9107,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     hwnd = CreateWindowEx(
         WS_EX_CLIENTEDGE,
-        "f系统1.0-beta",
-        "f系统1.0 专业版 - fOS 1.0 Professional Edition",
+        "f系统1.0-codename nori(music plus!!!)",
+        "f系统1.0专业版(music plus!!!)codename nori",
         WS_POPUP | WS_VISIBLE,
         0, 0,
         screenWidth, screenHeight,
@@ -6191,7 +9116,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     );
 
     if(hwnd == NULL) {
-        MessageBox(NULL, "窗口创建失败！","错误!",MB_ICONEXCLAMATION|MB_OK);
+        MessageBox(NULL, "窗口创建失败!","错误!",MB_ICONEXCLAMATION|MB_OK);
         return 0;
     }
 

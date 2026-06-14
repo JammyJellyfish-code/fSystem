@@ -1,0 +1,36 @@
+个人项目版权声明 / Personal Project Copyright Notice
+
+项目名称：f系统1.0 / Project Name: f System 1.0
+开发者：JammyJellyfish@hotmail.com / Developer: JammyJellyfish@hotmail.com
+版权所有 (C) 2020~9999 JammyJellyfish@hotmail.com / Copyright (C) 2020~9999 JammyJellyfish@hotmail.com
+保留所有权利 / All Rights Reserved
+
+许可条款 / License Terms：
+1. 本软件仅供个人学习和研究使用
+   This software is for personal learning and research use only
+2. 禁止任何形式的商业使用
+   Commercial use of any form is prohibited
+3. 禁止未经授权的分发和修改
+   Unauthorized distribution and modification are prohibited
+4. 禁止用于任何违法用途
+   Use for any illegal purposes is prohibited
+5. 源码可查看，但不得用于其他项目
+   Source code may be viewed but shall not be used in other projects
+
+免责声明 / Disclaimer：
+本软件按"原样"提供，不提供任何明示或暗示的担保，包括但不限于
+适销性、特定用途适用性的担保。作者不对使用本软件造成的任何
+损害承担责任。
+
+This software is provided "as is", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose. The author shall not be liable for any
+damages arising from the use of this software.
+
+联系信息 / Contact Information：
+如有问题请联系开发者。
+Please contact the developer if you have any questions.
+
+更多类容请详见《fos系统软件使用许可条款（修订版）.txt》
+
+最后更新：2025年 / Last Updated: 2025
